@@ -6,7 +6,7 @@ authors = ["winkidney <winkidney@gmail.com>"]
 license = "BSD 2-Clause"
 
 [tool.poetry.dependencies]
-python = ">=3.7"
+python = ">=3.9,<3.13"
 requests = "^2.27.1"
 django = ">2.2.17,<3"
 pillow = ">=8.1.1"
@@ -20,16 +20,18 @@ django-compressor = "^4.0"
 mock = "^4.0.3"
 gunicorn = "^20.1.0"
 djangorestframework = "^3.13.1"
+setuptools = ">=70.0.0"  # Required for distutils on Python 3.12+
+pyyaml = ">=6.0.1"  # Fix build issues on Python 3.12
 
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
 qrcode = "*"
-django-extensions = "*"
+django-extensions = "<4"  # Must be <4 for Django 2.2 compatibility
 mkdocs = "*"
 mkdocs-material = "*"
 jinja2 = "==3.0.3"
-black = "==19.10b0"
+black = ">=23.0.0"
 
 [tool.poetry.group.dev.dependencies]
 jinja2 = "3.0.3"
@@ -39,7 +41,3 @@ mkdocs-material = "8.4.0"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[[tool.poetry.source]]
-name = "tuna"
-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
-priority = "primary"

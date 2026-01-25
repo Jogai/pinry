@@ -1,49 +1,117 @@
 # Agent Build Instructions
 
+## Project Overview
+
+Pinry is a Pinterest-like image bookmarking application with:
+- **Backend**: Python/Django
+- **Frontend**: Vue.js SPA (pinry-spa)
+
+## Requirements
+
+- Python 3.9-3.12 (tested on 3.12)
+- NodeJS 18
+- Poetry or venv (Python package manager)
+- pnpm (Node package manager)
+
 ## Project Setup
+
+### Option 1: Poetry (Recommended)
+
 ```bash
-# Install dependencies (example for Node.js project)
-npm install
+cd pinry
 
-# Or for Python project
-pip install -r requirements.txt
+# If you get keyring errors, set this env var:
+export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
 
-# Or for Rust project  
-cargo build
+poetry install
+```
+
+### Option 2: venv (Alternative)
+
+```bash
+cd pinry
+
+# Create and set up venv
+python3 -m venv .venv
+.venv/bin/pip install --upgrade pip
+
+# Install dependencies
+.venv/bin/pip install 'requests>=2.27.1' 'django>2.2.17,<3' 'pillow>=8.1.1' markdown \
+  'django-filter==2.4.0' 'coreapi>=2.3.3' 'psycopg2-binary==2.9.9' 'django-taggit==1.3.0' \
+  'django-braces>=1.15.0' 'django-compressor>=4.0' 'mock>=4.0.3' 'gunicorn>=20.1.0' \
+  'djangorestframework>=3.13.1' setuptools 'django-extensions<4'
+```
+
+### Frontend Dependencies
+```bash
+cd pinry-spa
+pnpm install
+```
+
+**Python 3.12 Compatibility Notes**:
+- Django 2.2.x requires `setuptools` for `distutils` module (removed in Python 3.12)
+- `django-extensions` must be <4.0 to maintain Django 2.2 compatibility
+- `coreapi` shows pkg_resources deprecation warning (harmless)
+- Chinese mirror (tuna) removed from pyproject.toml - was causing Poetry lock failures
+
+## Development Server
+
+You need to run both the backend and frontend servers:
+
+### Backend (Terminal 1)
+
+With Poetry:
+```bash
+poetry run python manage.py migrate
+poetry run python manage.py runserver
+```
+
+With venv:
+```bash
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py runserver
+```
+
+### Frontend (Terminal 2)
+```bash
+cd pinry-spa
+pnpm serve
 ```
 
 ## Running Tests
 ```bash
-# Node.js
-npm test
+# With Poetry
+poetry run python manage.py test
 
-# Python
-pytest
-
-# Rust
-cargo test
+# With venv
+.venv/bin/python manage.py test
 ```
 
 ## Build Commands
+
+### Frontend Production Build
 ```bash
-# Production build
-npm run build
-# or
-cargo build --release
+cd pinry-spa
+pnpm build
 ```
 
-## Development Server
+### Lint Frontend
 ```bash
-# Start development server
-npm run dev
-# or
-cargo run
+cd pinry-spa
+pnpm lint
 ```
+
+## Configuration
+
+- Custom settings: Add `local_settings.py` in `pinry/settings/` to customize settings
+- Enable signups: Set `ALLOW_NEW_REGISTRATIONS = True` in local_settings.py
 
 ## Key Learnings
-- Update this section when you learn new build optimizations
-- Document any gotchas or special setup requirements
-- Keep track of the fastest test/build cycle
+- Backend and frontend run as separate services during development
+- Poetry or venv can manage Python dependencies; pnpm manages Node dependencies
+- Frontend dev server proxies API requests to backend on port 8000
+- Django 2.2.x requires setuptools for distutils on Python 3.12
+- Poetry may need `PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring` to avoid keyring errors
 
 ## Feature Development Quality Standards
 
