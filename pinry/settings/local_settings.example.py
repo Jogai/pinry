@@ -7,15 +7,17 @@ STATIC_ROOT = '/data/static'
 MEDIA_ROOT = os.path.join(STATIC_ROOT, 'media')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# Or just write your own secret-key here instead of using a env-variable
-SECRET_KEY = "secret_key_place_holder"
+# Generate a secure key with:
+# python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+SECRET_KEY = "REPLACE-WITH-YOUR-GENERATED-SECRET-KEY"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 # SECURITY WARNING: use your actual domain name in production!
-ALLOWED_HOSTS = ['*']
+# Replace with your actual domain names - DO NOT use ['*'] in production
+ALLOWED_HOSTS = ['your-domain.com', 'www.your-domain.com']
 
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases

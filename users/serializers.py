@@ -41,15 +41,15 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         write_only=True,
         required=True,
         allow_blank=False,
-        min_length=6,
-        max_length=32,
+        min_length=12,
+        # No max_length - allow long passphrases
     )
     password_repeat = serializers.CharField(
         write_only=True,
         required=True,
         allow_blank=False,
-        min_length=6,
-        max_length=32,
+        min_length=12,
+        # No max_length - allow long passphrases
     )
     token = serializers.SerializerMethodField(read_only=True)
 

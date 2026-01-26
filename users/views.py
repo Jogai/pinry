@@ -7,7 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponse
 from django.urls import reverse
 from django.utils.functional import lazy
+from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
+from django_ratelimit.decorators import ratelimit
 from rest_framework import mixins, routers
 from rest_framework.permissions import BasePermission
 from rest_framework.renderers import JSONRenderer
@@ -61,7 +63,14 @@ class UserViewSet(
         return User.objects.filter(id=self.request.user.id)
 
 
+@require_http_methods(["POST"])
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_user(request):
+    """
+    Authenticate user and return user data with token.
+
+    Rate limited to 5 attempts per minute per IP to prevent brute force attacks.
+    """
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:

@@ -7,9 +7,9 @@ license = "BSD 2-Clause"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
-requests = "^2.27.1"
+requests = "^2.31.0"  # Updated: fixes CVE-2023-32681
 django = ">2.2.17,<3"
-pillow = ">=8.1.1"
+pillow = ">=10.0.0"  # Updated: fixes multiple CVEs including buffer overflow
 markdown = "*"
 django-filter = "==2.4.0"
 coreapi = "^2.3.3"
@@ -22,6 +22,7 @@ gunicorn = "^20.1.0"
 djangorestframework = "^3.13.1"
 setuptools = ">=70.0.0"  # Required for distutils on Python 3.12+
 pyyaml = ">=6.0.1"  # Fix build issues on Python 3.12
+django-ratelimit = "^4.1.0"  # Rate limiting for auth endpoints
 
 
 [tool.poetry.dev-dependencies]

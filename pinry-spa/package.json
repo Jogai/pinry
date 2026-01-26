@@ -8,8 +8,9 @@
     "lint": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service lint"
   },
   "dependencies": {
-    "axios": "^0.21.2",
+    "axios": "^1.6.0",
     "buefy": "^0.8.20",
+    "dompurify": "^3.0.6",
     "bulma": "0.7.5",
     "core-js": "^3.3.2",
     "register-service-worker": "^1.6.2",

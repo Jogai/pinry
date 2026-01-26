@@ -1,5 +1,6 @@
 from django import forms
-from django.utils.translation import ugettext_lazy as _
+from django.core.validators import RegexValidator
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 
 
@@ -11,9 +12,15 @@ class UserCreationForm(forms.ModelForm):
     error_messages = {
         'duplicate_username': _("A user with that username already exists."),
     }
-    username = forms.RegexField(
-        label=_("Username"), max_length=30,
-        regex=r'^[\w\-.]+$'
+    username = forms.CharField(
+        label=_("Username"),
+        max_length=30,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w\-.]+$',
+                message=_("Enter a valid username. This value may contain only letters, numbers, and ./- characters."),
+            ),
+        ],
     )
     password = forms.CharField(
         label=_("Password"),

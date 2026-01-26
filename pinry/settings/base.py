@@ -170,3 +170,56 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ]
 }
+
+# Security settings
+# Note: SECURE_SSL_REDIRECT and cookie SECURE settings should be True in production
+# but are set to False here for development. Override in production settings.
+
+# HTTP Strict Transport Security (HSTS)
+# Enable in production by setting SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Prevent clickjacking
+X_FRAME_OPTIONS = 'DENY'
+
+# Prevent MIME type sniffing
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# XSS filter (legacy browsers)
+SECURE_BROWSER_XSS_FILTER = True
+
+# Referrer policy
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# Session cookie settings
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 1209600  # 2 weeks
+
+# CSRF cookie settings
+# Note: CSRF_COOKIE_HTTPONLY must be False so JavaScript can read the token
+# This is safe because CSRF tokens are not sensitive like session cookies
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# SSL settings - override to True in production
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
+# Rate limiting configuration
+# Uses Django's cache framework - defaults to local memory cache
+# For production with multiple workers, use Redis or Memcached
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_ENABLE = True
+
+# Default cache (local memory) - suitable for single-process development
+# Override in production settings with Redis/Memcached for multi-process
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}

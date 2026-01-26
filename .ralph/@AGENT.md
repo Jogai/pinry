@@ -36,10 +36,10 @@ python3 -m venv .venv
 .venv/bin/pip install --upgrade pip
 
 # Install dependencies
-.venv/bin/pip install 'requests>=2.27.1' 'django>2.2.17,<3' 'pillow>=8.1.1' markdown \
+.venv/bin/pip install 'requests>=2.31.0' 'django>2.2.17,<3' 'pillow>=10.0.0' markdown \
   'django-filter==2.4.0' 'coreapi>=2.3.3' 'psycopg2-binary==2.9.9' 'django-taggit==1.3.0' \
   'django-braces>=1.15.0' 'django-compressor>=4.0' 'mock>=4.0.3' 'gunicorn>=20.1.0' \
-  'djangorestframework>=3.13.1' setuptools 'django-extensions<4'
+  'djangorestframework>=3.13.1' 'django-ratelimit>=4.1.0' setuptools 'django-extensions<4'
 ```
 
 ### Frontend Dependencies
@@ -53,6 +53,9 @@ pnpm install
 - `django-extensions` must be <4.0 to maintain Django 2.2 compatibility
 - `coreapi` shows pkg_resources deprecation warning (harmless)
 - Chinese mirror (tuna) removed from pyproject.toml - was causing Poetry lock failures
+
+**Package Import Notes**:
+- `django-ratelimit` installs as `django_ratelimit` - import with `from django_ratelimit.decorators import ratelimit`
 
 ## Development Server
 

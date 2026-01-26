@@ -14,9 +14,15 @@ from .settings import IMAGE_SIZES, IMAGE_PATH, IMAGE_AUTO_DELETE
 
 
 def hashed_upload_to(instance, filename, **kwargs):
+    """
+    Generate upload path using SHA-256 hash of image content.
+
+    Note: Changed from MD5 to SHA-256 for better collision resistance.
+    New uploads use 'by-sha256' prefix; existing 'by-md5' files remain valid.
+    """
     image_type = 'original' if isinstance(instance, Image) else 'thumbnail'
-    prefix = 'image/%s/by-md5/' % (image_type,)
-    hasher = hashlib.md5()
+    prefix = 'image/%s/by-sha256/' % (image_type,)
+    hasher = hashlib.sha256()
     for chunk in instance.image.chunks():
         hasher.update(chunk)
     hash_ = hasher.hexdigest()

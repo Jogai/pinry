@@ -103,8 +103,6 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 import API from '../api';
 import FileUpload from './FileUpload.vue';
 import FilterSelect from './FilterSelect.vue';
@@ -277,7 +275,7 @@ export default {
             );
           }
           if (promises.length > 0) {
-            axios.all(promises).then(done);
+            Promise.all(promises).then(done);
           } else {
             done();
           }

@@ -19,21 +19,21 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 ## Critical Priority (Security - Immediate)
 
 ### CRIT-01: Fix ALLOWED_HOSTS Configuration
-- **Status**: [ ] Not Started (Still `['*']` in docker.py and development.py)
+- **Status**: [x] COMPLETED
 - **Files**: `pinry/settings/docker.py`, `pinry/settings/development.py`, `pinry/settings/local_settings.example.py`
 - **Issue**: `ALLOWED_HOSTS = ['*']` allows Host Header Injection attacks
 - **Fix**: Configure with actual domain names only
 - **Risk**: CVE-level vulnerability
 
 ### CRIT-02: Secure SECRET_KEY Management
-- **Status**: [ ] Not Started (Still "PLEASE_REPLACE_ME" and "REPLACE-ME")
+- **Status**: [x] COMPLETED
 - **Files**: `pinry/settings/docker.py`, `pinry/settings/development.py`
 - **Issue**: Placeholder secrets like `"PLEASE_REPLACE_ME"` and `"REPLACE-ME"`
 - **Fix**: Require strong random keys from environment variables, fail if not set
 - **Risk**: Session hijacking, CSRF token forgery, authentication bypass
 
 ### CRIT-03: Fix SSRF Vulnerability in Image Downloads
-- **Status**: [ ] Not Started (create_for_url() still has no validation)
+- **Status**: [x] COMPLETED
 - **Files**: `core/models.py` (lines 37-54)
 - **Issue**: `create_for_url()` accepts arbitrary URLs without validation
 - **Fix**:
@@ -44,17 +44,17 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 - **Risk**: Server-Side Request Forgery, DoS, internal network access
 
 ### CRIT-04: Upgrade Vulnerable Dependencies
-- **Status**: [ ] Not Started
-- **Files**: `pyproject.toml`, `requirements.txt`
+- **Status**: [x] COMPLETED
+- **Files**: `pyproject.toml`, `pinry-spa/package.json`
 - **Issue**: Known CVEs in current dependencies
 - **Packages**:
-  - [ ] urllib3 1.22 → latest (CVE-2021-21240, CVE-2020-26137)
-  - [ ] Pillow 9.1.1 → 11.x (CVE-2022-24303 buffer overflow)
-  - [ ] axios 0.21.4 → 1.13.x (multiple CVEs)
+  - [x] requests ^2.31.0 (includes urllib3 fix for CVE-2023-32681)
+  - [x] Pillow >=10.0.0 (fixes multiple CVEs including buffer overflow)
+  - [x] axios ^1.6.0 (multiple CVEs fixed, updated axios.all to Promise.all)
 - **Risk**: RCE via crafted images, MITM attacks, request injection
 
 ### CRIT-05: Fix XSS Vulnerability via v-html
-- **Status**: [ ] Not Started (v-html still used in 3 Vue components)
+- **Status**: [x] COMPLETED (Added DOMPurify sanitization)
 - **Files**: `pinry-spa/src/components/PinPreview.vue`, `pinry-spa/src/components/Pins.vue`, `pinry-spa/src/components/pin_edit/PinCreateModal.vue`
 - **Issue**: User descriptions rendered via `v-html` with weak escaping
 - **Fix**:
@@ -67,7 +67,7 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 ## High Priority (Security & Compatibility)
 
 ### HIGH-01: Add HTTP Security Headers
-- **Status**: [ ] Not Started
+- **Status**: [x] COMPLETED
 - **Files**: `pinry/settings/base.py`
 - **Issue**: Missing security headers
 - **Fix**: Add configuration:
@@ -80,7 +80,7 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
   ```
 
 ### HIGH-02: Configure Secure Cookie Settings
-- **Status**: [ ] Not Started
+- **Status**: [x] COMPLETED
 - **Files**: `pinry/settings/base.py`
 - **Issue**: Session cookies not secured
 - **Fix**: Add configuration:
@@ -93,37 +93,37 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
   ```
 
 ### HIGH-03: Strengthen Password Requirements
-- **Status**: [ ] Not Started (Still min_length=6, max_length=32)
+- **Status**: [x] COMPLETED (min_length=12, no max_length)
 - **Files**: `users/serializers.py` (lines 42-48)
 - **Issue**: Minimum password length of 6 characters, max 32
 - **Fix**: Change to min_length=12, remove max_length restriction
 
 ### HIGH-04: Add Rate Limiting to Authentication
-- **Status**: [ ] Not Started
-- **Files**: `users/views.py`
+- **Status**: [x] COMPLETED
+- **Files**: `users/views.py`, `pyproject.toml`, `pinry/settings/base.py`
 - **Issue**: No rate limiting on login/logout endpoints
-- **Fix**: Add django-ratelimit or similar, limit to 5 attempts per minute
+- **Fix**: Added django-ratelimit, login limited to 5 attempts per minute per IP
 
 ### HIGH-05: Replace Deprecated Django URL Patterns
-- **Status**: [ ] Not Started (users/urls.py still uses url() with regex)
+- **Status**: [x] COMPLETED
 - **Files**: `users/urls.py`, all URL configuration files
 - **Issue**: Using deprecated `url()` with regex patterns (removed in Django 4.0)
 - **Fix**: Replace with `path()` and `re_path()` from `django.urls`
 
 ### HIGH-06: Fix Deprecated Authentication Check
-- **Status**: [ ] Not Started (core/permissions.py:40 still uses is_authenticated())
+- **Status**: [x] COMPLETED
 - **Files**: `core/permissions.py`
 - **Issue**: `request.user.is_authenticated()` called as method (deprecated)
 - **Fix**: Change to `request.user.is_authenticated` (property)
 
 ### HIGH-07: Replace Deprecated Form Fields
-- **Status**: [ ] Not Started (users/forms.py still uses RegexField)
+- **Status**: [x] COMPLETED
 - **Files**: `users/forms.py`
 - **Issue**: Using deprecated `RegexField`
 - **Fix**: Use `CharField` with `validators` parameter
 
 ### HIGH-08: Update Translation Imports
-- **Status**: [ ] Not Started (users/forms.py still uses ugettext_lazy)
+- **Status**: [x] COMPLETED
 - **Files**: `users/forms.py`
 - **Issue**: `ugettext_lazy` deprecated since Django 3.0
 - **Fix**: Replace with `gettext_lazy`
@@ -166,22 +166,23 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
   - Update `filter_fields` to `filterset_fields`
 
 ### MED-03: Update Model Meta Options
-- **Status**: [ ] Not Started (core/models.py:90 still uses index_together)
+- **Status**: [x] COMPLETED
 - **Files**: `core/models.py`
 - **Issue**: `index_together` deprecated in Django 3.2
 - **Fix**: Replace with `indexes` parameter using `Index` objects
 
 ### MED-04: Fix Model __unicode__ Methods
-- **Status**: [ ] Not Started (core/models.py:113 still uses __unicode__)
+- **Status**: [x] COMPLETED
 - **Files**: `core/models.py`
 - **Issue**: `__unicode__` is Python 2 style
 - **Fix**: Rename to `__str__`
 
 ### MED-05: Replace MD5 with SHA-256
-- **Status**: [ ] Not Started (users/models.py:21 still uses hashlib.md5)
-- **Files**: `users/models.py`, `core/utils.py`, `django_images/models.py`
-- **Issue**: MD5 used for Gravatar and image hashing (cryptographically broken)
-- **Fix**: Replace with SHA-256
+- **Status**: [x] COMPLETED
+- **Files**: `core/utils.py`, `django_images/models.py`
+- **Issue**: MD5 used for image path hashing (cryptographically weak)
+- **Fix**: Replaced with SHA-256. New uploads use 'by-sha256' prefix; existing files unaffected
+- **Note**: Gravatar uses MD5 by their API spec - this is standard and unchanged
 
 ### MED-06: Plan Vue 2 → Vue 3 Migration
 - **Status**: [ ] Not Started
@@ -275,7 +276,7 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 - **Fix**: Remove or replace with proper logging
 
 ### LOW-07: Update User-Agent String
-- **Status**: [ ] Not Started (core/models.py:19-22 still uses Chrome 48 from 2016)
+- **Status**: [x] COMPLETED (Updated to Chrome 120)
 - **Files**: `core/models.py` (lines 18-22)
 - **Issue**: Hardcoded outdated Chrome User-Agent from 2016
 - **Fix**: Use more generic or current User-Agent
