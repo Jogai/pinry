@@ -20,14 +20,16 @@
                 <div @mouseenter="showEditButtons(item.id)"
                      @mouseleave="hideEditButtons(item.id)"
                 >
-                  <EditorUI
-                    v-show="shouldShowEdit(item.id)"
-                    :pin="item"
-                    :currentUsername="editorMeta.user.meta.username"
-                    :currentBoard="editorMeta.currentBoard"
-                    v-on:pin-delete-succeed="reset"
-                    v-on:pin-remove-from-board-succeed="reset"
-                  ></EditorUI>
+                  <transition name="fade">
+                    <EditorUI
+                      v-if="shouldShowEdit(item.id)"
+                      :pin="item"
+                      :currentUsername="editorMeta.user.meta.username"
+                      :currentBoard="editorMeta.currentBoard"
+                      v-on:pin-delete-succeed="reset"
+                      v-on:pin-remove-from-board-succeed="reset"
+                    ></EditorUI>
+                  </transition>
                   <img :src="item.url"
                      @load="onPinImageLoaded(item.id)"
                      @click="openPreview(item)"
@@ -35,42 +37,12 @@
                      :style="item.style"
                      class="pin-preview-image">
                 </div>
-                <div class="pin-footer">
-                  <div class="description" v-show="item.description" v-html="niceLinks(item.description)"></div>
-                  <div class="details">
-                    <div class="is-pulled-left">
-                      <img class="avatar" :src="item.avatar" alt="">
-                    </div>
-                    <div class="pin-info">
-                      <span class="dim">{{ $t("pinnedByInfo") }}&nbsp;
-                        <span>
-                          <router-link
-                            :to="{ name: 'user', params: {user: item.author} }">
-                            {{ item.author }}
-                          </router-link>
-                        </span>
-                        <template v-if="item.tags.length > 0">
-                          &nbsp;in&nbsp;
-                          <template v-for="tag in item.tags">
-                            <span v-bind:key="tag" class="pin-tag">
-                              <router-link :to="{ name: 'tag', params: {tag: tag} }"
-                                           params="{tag: tag}">{{ tag }}</router-link>
-                            </span>
-                          </template>
-                        </template>
-                        <span v-if="item.referer">• <a :href="item.referer" target="_blank">{{ $t("sourceLink") }}</a></span>
-                      </span>
-                    </div>
-                    <div class="is-clearfix"></div>
-                  </div>
-                </div>
               </div>
             </div>
           </template>
         </div>
       </div>
       <loadingSpinner v-bind:show="status.loading"></loadingSpinner>
-      <noMore v-bind:show="!status.hasNext"></noMore>
     </section>
   </div>
 </template>
@@ -80,7 +52,6 @@ import API from './api';
 import pinHandler from './utils/PinHandler';
 import PinPreview from './PinPreview.vue';
 import loadingSpinner from './loadingSpinner.vue';
-import noMore from './noMore.vue';
 import scroll from './utils/scroll';
 import bus from './utils/bus';
 import EditorUI from './editors/PinEditorUI.vue';
@@ -95,7 +66,7 @@ function createImageItem(pin) {
   image.description = pin.description;
   image.tags = pin.tags;
   image.author = pin.submitter.username;
-  image.avatar = `//gravatar.com/avatar/${pin.submitter.gravatar}`;
+  image.avatar = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMmQyZDJkIi8+CjxwYXRoIGQ9Ik0yNCAyNEMyNy4zMTM3IDI0IDMwIDIxLjMxMzcgMzAgMThDMzAgMTQuNjg2MyAyNy4zMTM3IDEyIDI0IDEyQzIwLjY4NjMgMTIgMTggMTQuNjg2MyAxOCAxOEMxOCAyMS4zMTM3IDIwLjY4NjMgMjQgMjQgMjRaIiBmaWxsPSIjNjY2NjY2Ii8+CjxwYXRoIGQ9Ik0yNCAyNkMyMC42ODYzIDI2IDE3LjI2MzcgMjcuMjEwNSAxNC42OTMgMjkuMDkzOEMxMi4xMjIzIDMwLjk3NyAxMC41IDMzLjQyOTMgMTAuNSAzNlY0MEgzNy41VjM2QzM3LjUgMzMuNDI5MyAzNS44Nzc3IDMwLjk3NyAzMy4zMDcgMjkuMDkzOEMzMC43MzYzIDI3LjIxMDUgMjcuMzEzNyAyNiAyNCAyNloiIGZpbGw9IiM2NjY2NjYiLz4KPC9zdmc+';
   image.large_image_url = pinHandler.escapeUrl(pin.image.image);
   image.original_image_url = pin.url;
   image.referer = pin.referer;
@@ -132,7 +103,6 @@ export default {
   name: 'pins',
   components: {
     loadingSpinner,
-    noMore,
     EditorUI,
   },
   data() {
@@ -198,17 +168,53 @@ export default {
       return blocks;
     },
     openPreview(pinItem) {
-      this.$buefy.modal.open(
+      const currentIndex = this.blocks.findIndex(pin => pin.id === pinItem.id);
+      let previewComponent = null;
+
+      const modal = this.$buefy.modal.open(
         {
           parent: this,
           component: PinPreview,
           props: {
             pinItem,
+            allPins: this.blocks,
+            currentIndex,
           },
           scroll: 'keep',
           customClass: 'pin-preview-at-home',
+          events: {
+            'navigate-pin': (newIndex) => {
+              if (newIndex >= 0 && newIndex < this.blocks.length) {
+                // Find component instance if not already found
+                if (!previewComponent) {
+                  // Try to find the PinPreview component in modal's children
+                  if (modal && modal.$children && modal.$children.length > 0) {
+                    previewComponent = modal.$children.find(child => child.$options.name === 'PinPreview');
+                  }
+                }
+
+                // Update props
+                if (previewComponent) {
+                  // Use Vue.set to ensure reactivity
+                  this.$set(previewComponent, 'pinItem', this.blocks[newIndex]);
+                  this.$set(previewComponent, 'currentIndex', newIndex);
+                } else if (modal && modal.propsData) {
+                  // Fallback to propsData
+                  this.$set(modal.propsData, 'pinItem', this.blocks[newIndex]);
+                  this.$set(modal.propsData, 'currentIndex', newIndex);
+                }
+              }
+            },
+          },
         },
       );
+
+      // Try to get component reference after modal mounts
+      this.$nextTick(() => {
+        if (modal && modal.$children && modal.$children.length > 0) {
+          previewComponent = modal.$children.find(child => child.$options.name === 'PinPreview');
+        }
+      });
     },
     shouldFetchMore(created) {
       if (!created) {
@@ -327,54 +333,32 @@ $avatar-height: 30px;
 @import './utils/fonts';
 @import './utils/loader.scss';
 
-.pin-card{
+.pin-card {
+  border-radius: 8px;
+  overflow: hidden;
+
   .pin-preview-image {
     cursor: zoom-in;
+    border-radius: 8px;
   }
   > img {
     min-width: $pin-preview-width;
-    background-color: white;
-    border-radius: 3px 3px 0 0;
+    background-color: #2d2d2d;
+    border-radius: 8px;
     @include loader('../assets/loader.gif');
-  }
-  .avatar {
-    height: $avatar-height;
-    width: $avatar-width;
-    border-radius: 3px;
-  }
-  .pin-tag {
-    margin-right: 0.2rem;
-  }
-}
-.pin-footer {
-  position: relative;
-  overflow-wrap: break-word;
-  top: $pin-footer-position-fix;
-  background-color: white;
-  border-radius: 0 0 3px 3px ;
-  box-shadow: 0 1px 0 #bbb;
-  .description {
-    @include description-font;
-    padding: 8px;
-    border-bottom: 1px solid #DDDDDD;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .details {
-    @include secondary-font;
-    padding: 10px;
-    > .pin-info {
-      line-height: 16px;
-      width: 220px;
-      padding-left: $avatar-width + 5px;
-    }
-    .pin-info a {
-      font-weight: bold;
-    }
   }
 }
 
 @import 'utils/grid-layout';
-@include screen-grid-layout("#pins-container")
+@include screen-grid-layout("#pins-container");
+
+/* Fade transition for editor buttons */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
 
 </style>

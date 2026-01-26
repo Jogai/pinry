@@ -268,7 +268,7 @@ $avatar-height: 30px;
 .board-card{
   .card-image > img {
     min-width: $pin-preview-width;
-    background-color: white;
+    background-color: #2d2d2d;
     border-radius: 3px 3px 0 0;
     @include loader('../assets/loader.gif');
   }
@@ -276,9 +276,10 @@ $avatar-height: 30px;
 .board-footer {
   position: relative;
   top: $pin-footer-position-fix;
-  background-color: white;
+  background-color: #2d2d2d;
   border-radius: 0 0 3px 3px ;
-  box-shadow: 0 1px 0 #bbb;
+  box-shadow: 0 1px 0 #404040;
+  color: #e0e0e0;
   font-weight: bold;
   .description {
     @include secondary-font;

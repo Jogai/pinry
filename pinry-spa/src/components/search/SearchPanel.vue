@@ -120,7 +120,7 @@ export default {
     padding-right: 2rem;
   }
   .filter-selector {
-    background-color: white;
+    background-color: #2d2d2d;
     border-radius: 3px;
     .search-input {
       width: 100%;

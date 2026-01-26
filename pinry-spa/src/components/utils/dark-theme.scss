@@ -1,0 +1,198 @@
+// Dark theme overrides for Bulma and Buefy
+
+// Variables
+$dark-background: #1a1a1a;
+$dark-surface: #2d2d2d;
+$dark-surface-elevated: #3a3a3a;
+$dark-text: #ffffff;
+$dark-text-secondary: #e0e0e0;
+$dark-border: #404040;
+$pink-desaturated: #cc8fa8;
+$pink-desaturated-hover: #d4a0b5;
+
+// Override default text colors
+p, span, div, h1, h2, h3, h4, h5, h6, li, td, th, label, .title, .subtitle {
+  color: $dark-text !important;
+}
+
+// Links
+a {
+  color: #4a9eff !important;
+  
+  &:hover {
+    color: #6bb3ff !important;
+  }
+}
+
+// Buttons
+.button {
+  &.is-light {
+    background-color: $pink-desaturated !important;
+    color: white !important;
+    border-color: $pink-desaturated !important;
+    
+    &:hover {
+      background-color: $pink-desaturated-hover !important;
+      border-color: $pink-desaturated-hover !important;
+    }
+  }
+  
+  &.is-primary {
+    background-color: $pink-desaturated !important;
+    color: white !important;
+    border-color: $pink-desaturated !important;
+    
+    &:hover {
+      background-color: $pink-desaturated-hover !important;
+      border-color: $pink-desaturated-hover !important;
+    }
+  }
+  
+  &.is-warning {
+    background-color: $pink-desaturated !important;
+    color: white !important;
+    border-color: $pink-desaturated !important;
+    
+    &:hover {
+      background-color: $pink-desaturated-hover !important;
+      border-color: $pink-desaturated-hover !important;
+    }
+  }
+  
+  &.is-link {
+    background-color: $pink-desaturated !important;
+    color: white !important;
+    border-color: $pink-desaturated !important;
+    
+    &:hover {
+      background-color: $pink-desaturated-hover !important;
+      border-color: $pink-desaturated-hover !important;
+    }
+  }
+  
+  &.is-success {
+    background-color: $pink-desaturated !important;
+    color: white !important;
+    border-color: $pink-desaturated !important;
+    
+    &:hover {
+      background-color: $pink-desaturated-hover !important;
+      border-color: $pink-desaturated-hover !important;
+    }
+  }
+}
+
+// Cards
+.card {
+  background-color: $dark-surface !important;
+  color: $dark-text !important;
+  
+  .card-header {
+    background-color: $dark-surface-elevated !important;
+    border-color: $dark-border !important;
+  }
+  
+  .card-content {
+    background-color: $dark-surface !important;
+    color: $dark-text !important;
+  }
+  
+  .card-footer {
+    background-color: $dark-surface-elevated !important;
+    border-color: $dark-border !important;
+  }
+}
+
+// Inputs
+.input, .textarea, .select select {
+  background-color: $dark-surface !important;
+  color: $dark-text !important;
+  border-color: $dark-border !important;
+  
+  &:focus {
+    border-color: $pink-desaturated !important;
+    box-shadow: 0 0 0 0.125em rgba(204, 143, 168, 0.25) !important;
+  }
+  
+  &::placeholder {
+    color: $dark-text-secondary !important;
+  }
+}
+
+// Select dropdown
+.select:not(.is-multiple):not(.is-loading)::after {
+  border-color: $dark-text-secondary !important;
+}
+
+// Navbar
+.navbar {
+  background-color: $dark-surface !important;
+  
+  .navbar-brand, .navbar-item, .navbar-link {
+    color: $dark-text !important;
+    
+    &:hover {
+      background-color: $dark-surface-elevated !important;
+      color: $dark-text !important;
+    }
+  }
+  
+  .navbar-burger {
+    color: $dark-text !important;
+  }
+}
+
+// Dropdown
+.dropdown-content {
+  background-color: $dark-surface !important;
+  
+  .dropdown-item {
+    color: $dark-text !important;
+    
+    &:hover {
+      background-color: $dark-surface-elevated !important;
+      color: $dark-text !important;
+    }
+  }
+}
+
+// Modal
+.modal-background {
+  background-color: rgba(0, 0, 0, 0.86) !important;
+}
+
+.modal-card {
+  background-color: $dark-surface !important;
+  
+  .modal-card-head,
+  .modal-card-foot {
+    background-color: $dark-surface-elevated !important;
+    border-color: $dark-border !important;
+    color: $dark-text !important;
+  }
+  
+  .modal-card-body {
+    background-color: $dark-surface !important;
+    color: $dark-text !important;
+  }
+}
+
+
+// Checkbox
+.checkbox input[type="checkbox"] {
+  &:checked + .check {
+    background-color: $pink-desaturated !important;
+    border-color: $pink-desaturated !important;
+  }
+}
+
+// Buefy specific overrides
+.b-tag {
+  background-color: $dark-surface-elevated !important;
+  color: $dark-text !important;
+  
+  &.is-info {
+    background-color: $pink-desaturated !important;
+    color: white !important;
+  }
+}

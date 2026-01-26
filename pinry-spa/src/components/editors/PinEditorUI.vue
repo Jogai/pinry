@@ -5,28 +5,28 @@
           <b-icon
             type="is-light"
             icon="minus-box"
-            custom-size="mdi-24px">
+            custom-size="mdi-16px">
          </b-icon>
       </span>
       <span class="icon-container" @click="addToBoard">
           <b-icon
             type="is-light"
             icon="plus-box"
-            custom-size="mdi-24px">
+            custom-size="mdi-16px">
          </b-icon>
       </span>
       <span class="icon-container" @click="deletePin" v-if="isOwner">
          <b-icon
            type="is-light"
            icon="delete"
-           custom-size="mdi-24px">
+           custom-size="mdi-16px">
          </b-icon>
       </span>
       <span class="icon-container" v-if="isOwner" @click="editPin">
        <b-icon
          type="is-light"
          icon="pencil"
-         custom-size="mdi-24px">
+         custom-size="mdi-16px">
        </b-icon>
       </span>
     </div>

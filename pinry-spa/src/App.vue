@@ -16,10 +16,21 @@ export default {
   // Import Bulma and Buefy styles
   @import "~bulma";
   @import "~buefy/src/scss/buefy";
+  // Import dark theme overrides
+  @import "./components/utils/dark-theme.scss";
+
   html {
-    background-color: #F5F5EB;
+    background-color: #1a1a1a;
   }
-  .body {
+
+  body {
     font-family: 'Open Sans', sans-serif;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+  }
+
+  #app {
+    background-color: #1a1a1a;
+    min-height: 100vh;
   }
 </style>

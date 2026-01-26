@@ -23,5 +23,6 @@ export default {
     font-style: italic;
     text-align: center;
     padding: 50px;
+    color: #a0a0a0;
 }
 </style>

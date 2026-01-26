@@ -11,7 +11,6 @@ class PublicUserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = (
             'username',
-            'gravatar',
             settings.DRF_URL_FIELD_NAME,
         )
         extra_kwargs = {
@@ -28,7 +27,6 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             'username',
             'token',
             'email',
-            'gravatar',
             'password',
             'password_repeat',
             settings.DRF_URL_FIELD_NAME,

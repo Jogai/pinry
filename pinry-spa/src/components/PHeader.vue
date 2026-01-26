@@ -1,171 +1,158 @@
 <template>
   <div class="p-header">
-    <nav class="navbar" role="navigation" aria-label="main navigation">
-      <div class="container">
-        <div class="navbar-brand">
-          <a class="navbar-item" href="/">
-            <img src="../assets/logo-dark.png" height="28">
-          </a>
-          <a role="button" class="navbar-burger burger"
-             aria-label="menu" aria-expanded="false"
-             v-on:click="toggleMenu"
-             data-target="PinryNav">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-          </a>
-        </div>
-        <div id="PinryNav" class="navbar-menu" :class="{ 'is-active': active}">
-          <div class="navbar-start">
-            <a class="navbar-item" :href="bookmarklet">
-              {{ $t("bookmarkletLink") }}
-            </a>
-            <div
-              v-if="user.loggedIn"
-              class="navbar-item has-dropdown is-hoverable">
-              <a class="navbar-link">
-                {{ $t("createLink") }}
-              </a>
-              <div class="navbar-dropdown">
-                <a
-                  @click="createPin"
-                  class="navbar-item">
-                  {{ $t("pinLink") }}
-                </a>
-                <a
-                  @click="createBoard"
-                  class="navbar-item">
-                  {{ $t("boardLink") }}
-                </a>
-              </div>
-            </div>
-            <div
-              v-if="user.loggedIn"
-              class="navbar-item has-dropdown is-hoverable">
-              <a class="navbar-link">
-                {{ $t("myLink") }}
-              </a>
-              <div class="navbar-dropdown">
-                <router-link
-                  :to="{ name: 'boards4user', params: {username: user.meta.username} }"
-                  class="navbar-item">
-                  {{ $t("boardsLink") }}
-                </router-link>
-                <router-link
-                  :to="{ name: 'user', params: {user: user.meta.username} }"
-                  class="navbar-item">
-                  {{ $t("pinsLink") }}
-                </router-link>
-                <router-link
-                  :to="{ name: 'profile4user', params: {username: user.meta.username} }"
-                  class="navbar-item">
-                  {{ $t("profileLink") }}
-                </router-link>
-              </div>
-            </div>
-            <div class="navbar-item has-dropdown is-hoverable">
-              <a class="navbar-link">
-                {{ $t("browserExtensionsLink") }}
-              </a>
-              <div class="navbar-dropdown">
-                <a class="navbar-item" href="https://chrome.google.com/webstore/detail/jmhdcnmfkglikfjafdmdikoonedgijpa/">
-                  {{ $t("chromeLink") }}
-                </a>
-                <a class="navbar-item" href="https://addons.mozilla.org/en-US/firefox/addon/add-to-pinry/">
-                  {{ $t("firefoxLink") }}
-                </a>
-              </div>
-            </div>
+    <div class="nav-icon-container" @click="toggleMenu" @mouseleave="handleMouseLeave">
+      <img
+        :src="iconSrc"
+        alt="Menu"
+        class="nav-icon"
+        :class="{ 'is-open': menuOpen }"
+      />
+      <transition name="menu">
+        <div v-if="menuOpen" class="nav-menu" @mouseenter="keepMenuOpen" @mouseleave="handleMenuLeave">
+          <div
+            class="nav-menu-item"
+            @click="handlePinsClick"
+          >
+            Pins
           </div>
-          <div class="navbar-end">
-            <router-link
-              :to="{ name: 'search' }"
-              class="navbar-item">
-              <b-icon
-                type="is-dark"
-                icon="magnify"
-                custom-size="mdi-24px">
-              </b-icon>
-            </router-link>
-            <div
-              class="navbar-item has-dropdown is-hoverable">
-              <a class="navbar-link">
-                <b-icon
-                  type="is-dark"
-                  icon="translate"
-                  custom-size="mdi-24px">
-                </b-icon>
-              </a>
-              <div class="navbar-dropdown">
-                <a
-                  v-for="locale in $i18n.availableLocales"
-                  :key="`locale-${locale}`"
-                  @click="setLocale(locale)"
-                  class="navbar-item">
-                  {{ langs[locale] }}
-                </a>
-              </div>
-            </div>
-            <div class="navbar-item">
-              <div class="buttons">
-                <a
-                  @click="signUp"
-                  v-show="!user.loggedIn"
-                  class="button is-primary">
-                  <strong>{{ $t("signUpLink") }}</strong>
-                </a>
-                <a
-                  v-show="!user.loggedIn"
-                  v-on:click="logIn"
-                  class="button is-light">
-                  {{ $t("logInLink") }}
-                </a>
-                <a
-                  v-show="user.loggedIn"
-                  v-on:click="logOut"
-                  class="button is-light">
-                  {{ $t("logOutLink") }}
-                </a>
-              </div>
-            </div>
+          <div
+            v-if="user.loggedIn"
+            class="nav-menu-item"
+            @click="handleAddClick"
+          >
+            Add
+          </div>
+          <div
+            class="nav-menu-item"
+            @click="handleSearchClick"
+          >
+            Search
+          </div>
+          <div
+            v-if="user.loggedIn"
+            class="nav-menu-item"
+            @click="handleProfileClick"
+          >
+            Profile
+          </div>
+          <div
+            v-if="!user.loggedIn"
+            class="nav-menu-item"
+            @click="handleSignUpClick"
+          >
+            Sign Up
+          </div>
+          <div
+            v-if="!user.loggedIn"
+            class="nav-menu-item"
+            @click="handleLogInClick"
+          >
+            Log In
+          </div>
+          <div
+            v-if="user.loggedIn"
+            class="nav-menu-item"
+            @click="handleLogOutClick"
+          >
+            Log Out
           </div>
         </div>
-      </div>
-    </nav>
+      </transition>
+    </div>
   </div>
 </template>
 
 <script>
-import localeUtils from '@/components/utils/i18n';
 import api from './api';
 import modals from './modals';
+import pinstleLogo from '../assets/pinstle-logo.png';
 
 export default {
   name: 'p-header',
   data() {
     return {
-      active: false,
+      menuOpen: false,
+      menuHovered: false,
+      dismissTimeout: null,
       user: {
         loggedIn: false,
         meta: {},
       },
-      langs: localeUtils.langCode2Name,
     };
   },
   computed: {
-    bookmarklet() {
-      const url = new URL(window.location);
-      const host = url.origin;
-      return `javascript:void((function(d){var s=d.createElement('script');s.id='pinry-bookmarklet';s.src='${host}/static/js/bookmarklet.js?'+Math.random()*10000000000000000;d.body.appendChild(s)})(document));`;
+    iconSrc() {
+      return pinstleLogo;
     },
   },
   methods: {
-    setLocale(locale) {
-      this.$i18n.locale = locale;
-      localStorage.setItem('localeCode', locale);
+    handleClickOutside(event) {
+      const container = this.$el.querySelector('.nav-icon-container');
+      if (container && !container.contains(event.target)) {
+        this.menuOpen = false;
+        this.menuHovered = false;
+      }
     },
     toggleMenu() {
-      this.active = !this.active;
+      this.menuOpen = !this.menuOpen;
+      if (!this.menuOpen) {
+        this.menuHovered = false;
+      }
+    },
+    handleMouseLeave() {
+      // Close menu on mouse leave from icon container with delay
+      if (!this.menuHovered) {
+        this.dismissTimeout = setTimeout(() => {
+          this.menuOpen = false;
+        }, 700);
+      }
+    },
+    handleMenuLeave() {
+      this.menuHovered = false;
+      this.dismissTimeout = setTimeout(() => {
+        this.menuOpen = false;
+      }, 700);
+    },
+    keepMenuOpen() {
+      this.menuHovered = true;
+      // Clear any pending dismiss timeout
+      if (this.dismissTimeout) {
+        clearTimeout(this.dismissTimeout);
+        this.dismissTimeout = null;
+      }
+    },
+    handlePinsClick() {
+      this.$router.push({ name: 'home' });
+      this.menuOpen = false;
+    },
+    handleAddClick() {
+      this.createPin();
+      this.menuOpen = false;
+    },
+    handleSearchClick() {
+      this.$router.push({ name: 'search' });
+      this.menuOpen = false;
+    },
+    handleProfileClick() {
+      if (this.user.loggedIn && this.user.meta.username) {
+        this.$router.push({
+          name: 'profile4user',
+          params: { username: this.user.meta.username },
+        });
+        this.menuOpen = false;
+      }
+    },
+    handleSignUpClick() {
+      this.signUp();
+      this.menuOpen = false;
+    },
+    handleLogInClick() {
+      this.logIn();
+      this.menuOpen = false;
+    },
+    handleLogOutClick() {
+      this.logOut();
+      this.menuOpen = false;
     },
     onLoginSucceed() {
       this.initializeUser(true);
@@ -212,10 +199,113 @@ export default {
   },
   beforeMount() {
     this.initializeUser();
+    // Close menu when clicking outside
+    document.addEventListener('click', this.handleClickOutside);
+  },
+  beforeDestroy() {
+    document.removeEventListener('click', this.handleClickOutside);
+    if (this.dismissTimeout) {
+      clearTimeout(this.dismissTimeout);
+    }
   },
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@font-face {
+  font-family: 'Rubik';
+  src: url('../assets/Rubik/static/Rubik-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
 
+.p-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.nav-icon-container {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.nav-icon {
+  width: 48px;
+  height: 48px;
+  transition: filter 0.3s ease;
+
+  // When menu is open, show white
+  &.is-open {
+    filter: brightness(0) invert(1);
+  }
+
+  // When menu is closed, show natural colors (no filter)
+  &:not(.is-open) {
+    filter: none;
+  }
+}
+
+.nav-menu {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: fit-content;
+}
+
+.nav-menu-item {
+  background-color: #000002;
+  color: #fefefe;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: 'Rubik', sans-serif;
+  font-size: 0.725em;
+  font-weight: bold;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  user-select: none;
+
+  &:hover {
+    background-color: #0a0a0a;
+  }
+}
+
+// Menu animation
+.menu-enter-active {
+  animation: slideDownFadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.menu-leave-active {
+  animation: slideUpFadeOut 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideDownFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideUpFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.9);
+  }
+}
 </style>

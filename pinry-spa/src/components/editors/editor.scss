@@ -1,22 +1,28 @@
-@mixin border-radius {
-  border-radius: 3px;
-}
-
 .editor-buttons {
-  padding: 3px 1px 3px 3px;
-  background-color: rgba(225, 225, 225, 0.6);
+  display: flex;
+  gap: 4px;
   position: absolute;
-  top: 5px;
-  right: 5px;
-  float: right;
+  bottom: 12px;
+  right: 8px;
   cursor: pointer;
+  padding: 4px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 999px;
 
-  @include border-radius;
   .icon-container {
-    @include border-radius;
-    padding: 5px 2px 2px 2px;
-    background-color: rgba(0, 0, 0, 0.8);
-    margin-right: 2px;
+    border-radius: 8px;
+    padding: 4px;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    margin: 0;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
     span {
       opacity: 0.9;
     }

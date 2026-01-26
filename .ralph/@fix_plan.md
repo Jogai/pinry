@@ -19,21 +19,21 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 ## Critical Priority (Security - Immediate)
 
 ### CRIT-01: Fix ALLOWED_HOSTS Configuration
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (Still `['*']` in docker.py and development.py)
 - **Files**: `pinry/settings/docker.py`, `pinry/settings/development.py`, `pinry/settings/local_settings.example.py`
 - **Issue**: `ALLOWED_HOSTS = ['*']` allows Host Header Injection attacks
 - **Fix**: Configure with actual domain names only
 - **Risk**: CVE-level vulnerability
 
 ### CRIT-02: Secure SECRET_KEY Management
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (Still "PLEASE_REPLACE_ME" and "REPLACE-ME")
 - **Files**: `pinry/settings/docker.py`, `pinry/settings/development.py`
 - **Issue**: Placeholder secrets like `"PLEASE_REPLACE_ME"` and `"REPLACE-ME"`
 - **Fix**: Require strong random keys from environment variables, fail if not set
 - **Risk**: Session hijacking, CSRF token forgery, authentication bypass
 
 ### CRIT-03: Fix SSRF Vulnerability in Image Downloads
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (create_for_url() still has no validation)
 - **Files**: `core/models.py` (lines 37-54)
 - **Issue**: `create_for_url()` accepts arbitrary URLs without validation
 - **Fix**:
@@ -54,7 +54,7 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 - **Risk**: RCE via crafted images, MITM attacks, request injection
 
 ### CRIT-05: Fix XSS Vulnerability via v-html
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (v-html still used in 3 Vue components)
 - **Files**: `pinry-spa/src/components/PinPreview.vue`, `pinry-spa/src/components/Pins.vue`, `pinry-spa/src/components/pin_edit/PinCreateModal.vue`
 - **Issue**: User descriptions rendered via `v-html` with weak escaping
 - **Fix**:
@@ -93,7 +93,7 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
   ```
 
 ### HIGH-03: Strengthen Password Requirements
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (Still min_length=6, max_length=32)
 - **Files**: `users/serializers.py` (lines 42-48)
 - **Issue**: Minimum password length of 6 characters, max 32
 - **Fix**: Change to min_length=12, remove max_length restriction
@@ -105,25 +105,25 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 - **Fix**: Add django-ratelimit or similar, limit to 5 attempts per minute
 
 ### HIGH-05: Replace Deprecated Django URL Patterns
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (users/urls.py still uses url() with regex)
 - **Files**: `users/urls.py`, all URL configuration files
 - **Issue**: Using deprecated `url()` with regex patterns (removed in Django 4.0)
 - **Fix**: Replace with `path()` and `re_path()` from `django.urls`
 
 ### HIGH-06: Fix Deprecated Authentication Check
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (core/permissions.py:40 still uses is_authenticated())
 - **Files**: `core/permissions.py`
 - **Issue**: `request.user.is_authenticated()` called as method (deprecated)
 - **Fix**: Change to `request.user.is_authenticated` (property)
 
 ### HIGH-07: Replace Deprecated Form Fields
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (users/forms.py still uses RegexField)
 - **Files**: `users/forms.py`
 - **Issue**: Using deprecated `RegexField`
 - **Fix**: Use `CharField` with `validators` parameter
 
 ### HIGH-08: Update Translation Imports
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (users/forms.py still uses ugettext_lazy)
 - **Files**: `users/forms.py`
 - **Issue**: `ugettext_lazy` deprecated since Django 3.0
 - **Fix**: Replace with `gettext_lazy`
@@ -166,19 +166,19 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
   - Update `filter_fields` to `filterset_fields`
 
 ### MED-03: Update Model Meta Options
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (core/models.py:90 still uses index_together)
 - **Files**: `core/models.py`
 - **Issue**: `index_together` deprecated in Django 3.2
 - **Fix**: Replace with `indexes` parameter using `Index` objects
 
 ### MED-04: Fix Model __unicode__ Methods
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (core/models.py:113 still uses __unicode__)
 - **Files**: `core/models.py`
 - **Issue**: `__unicode__` is Python 2 style
 - **Fix**: Rename to `__str__`
 
 ### MED-05: Replace MD5 with SHA-256
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (users/models.py:21 still uses hashlib.md5)
 - **Files**: `users/models.py`, `core/utils.py`, `django_images/models.py`
 - **Issue**: MD5 used for Gravatar and image hashing (cryptographically broken)
 - **Fix**: Replace with SHA-256
@@ -222,10 +222,11 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 - **Fix**: Use dynamic imports for route components
 
 ### MED-11: Update Dockerfile Base Image
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (Still uses python:3.7-stretch)
 - **Files**: `Dockerfile`
 - **Issue**: Uses `python:3.7-stretch` (2017 base image)
 - **Fix**: Update to `python:3.11-slim-bookworm` or similar
+- **Note**: pyproject.toml updated to support Python >=3.9,<3.13
 
 ### MED-12: Add Query Optimization
 - **Status**: [ ] Not Started
@@ -244,10 +245,10 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 - **Fix**: Pin to specific versions for reproducible builds
 
 ### LOW-02: Update Black Formatter
-- **Status**: [ ] Not Started
+- **Status**: [x] COMPLETED
 - **Files**: `pyproject.toml`
 - **Issue**: black 19.10b0 is from 2019
-- **Fix**: Update to latest stable version
+- **Fix**: Updated to ">=23.0.0"
 
 ### LOW-03: Upgrade ESLint
 - **Status**: [ ] Not Started
@@ -274,7 +275,7 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 - **Fix**: Remove or replace with proper logging
 
 ### LOW-07: Update User-Agent String
-- **Status**: [ ] Not Started
+- **Status**: [ ] Not Started (core/models.py:19-22 still uses Chrome 48 from 2016)
 - **Files**: `core/models.py` (lines 18-22)
 - **Issue**: Hardcoded outdated Chrome User-Agent from 2016
 - **Fix**: Use more generic or current User-Agent
@@ -349,10 +350,10 @@ Pinry is a Pinterest-like image bookmarking application that is approximately a 
 | Pillow | 9.1.1 | 11.x | CRITICAL |
 | urllib3 | 1.22 | 2.x | CRITICAL |
 | requests | 2.27.1 | 2.32+ | HIGH |
-| psycopg2-binary | 2.8.6 | 2.9+ | MEDIUM |
+| psycopg2-binary | 2.9.9 ✓ | 2.9+ | COMPLETED |
 | django-filter | 2.4.0 | 24.x | MEDIUM |
 | django-taggit | 1.3.0 | 6.x | MEDIUM |
-| black | 19.10b0 | 24.x | LOW |
+| black | >=23.0.0 ✓ | 24.x | COMPLETED |
 
 ### Frontend (Node.js)
 
