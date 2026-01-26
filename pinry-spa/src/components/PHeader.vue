@@ -1,63 +1,93 @@
 <template>
   <div class="p-header">
-    <div class="nav-icon-container" @click="toggleMenu" @mouseleave="handleMouseLeave">
-      <img
-        :src="iconSrc"
-        alt="Menu"
-        class="nav-icon"
-        :class="{ 'is-open': menuOpen }"
-      />
-      <transition name="menu">
-        <div v-if="menuOpen" class="nav-menu" @mouseenter="keepMenuOpen" @mouseleave="handleMenuLeave">
-          <div
-            class="nav-menu-item"
-            @click="handlePinsClick"
-          >
-            Pins
+    <!-- Placeholder hitbox for logo area -->
+    <div
+      class="logo-placeholder"
+      @mouseenter="showLogoOnHover"
+      @mouseleave="handleLogoPlaceholderLeave"
+      @click="handlePlaceholderClick"
+    >
+      <transition name="fade">
+        <div
+          v-if="!logoHidden"
+          class="nav-icon-container"
+          @click="toggleMenu"
+          @mouseenter="showMenuOnHover"
+          @mouseleave="handleMouseLeave"
+        >
+        <img
+          :src="iconSrc"
+          alt="Menu"
+          class="nav-icon"
+          :class="{ 'is-open': menuOpen }"
+        />
+        <transition name="menu">
+          <div v-if="menuOpen" class="nav-menu" @mouseenter="keepMenuOpen" @mouseleave="handleMenuLeave">
+            <div
+              class="nav-menu-item"
+              @click="handlePinsClick"
+            >
+              Pins
+            </div>
+            <div
+              v-if="user.loggedIn"
+              class="nav-menu-item"
+              @click="handleAddClick"
+            >
+              Add
+            </div>
+            <div
+              class="nav-menu-item"
+              @click="handleSearchClick"
+            >
+              Search
+            </div>
+            <div
+              v-if="user.loggedIn"
+              class="nav-menu-item"
+              @click="handleProfileClick"
+            >
+              Profile
+            </div>
+            <div
+              v-if="!user.loggedIn"
+              class="nav-menu-item"
+              @click="handleSignUpClick"
+            >
+              Sign Up
+            </div>
+            <div
+              v-if="!user.loggedIn"
+              class="nav-menu-item"
+              @click="handleLogInClick"
+            >
+              Log In
+            </div>
+            <div
+              v-if="user.loggedIn"
+              class="nav-menu-item"
+              @click="handleLogOutClick"
+            >
+              Log Out
+            </div>
           </div>
-          <div
-            v-if="user.loggedIn"
-            class="nav-menu-item"
-            @click="handleAddClick"
-          >
-            Add
-          </div>
-          <div
-            class="nav-menu-item"
-            @click="handleSearchClick"
-          >
-            Search
-          </div>
-          <div
-            v-if="user.loggedIn"
-            class="nav-menu-item"
-            @click="handleProfileClick"
-          >
-            Profile
-          </div>
-          <div
-            v-if="!user.loggedIn"
-            class="nav-menu-item"
-            @click="handleSignUpClick"
-          >
-            Sign Up
-          </div>
-          <div
-            v-if="!user.loggedIn"
-            class="nav-menu-item"
-            @click="handleLogInClick"
-          >
-            Log In
-          </div>
-          <div
-            v-if="user.loggedIn"
-            class="nav-menu-item"
-            @click="handleLogOutClick"
-          >
-            Log Out
-          </div>
+        </transition>
         </div>
       </transition>
+    </div>
+    <!-- FAB Add Pin Button -->
+    <div
+      v-if="user.loggedIn"
+      class="fab-add-pin"
+      :class="{ 'fade-out': iconHidden }"
+      @click.stop="handleFabClick"
+    >
+      <img
+        :src="iconSrc"
+        alt="Add Pin"
+        class="fab-icon"
+        :class="{ 'is-spinning': fabSpinning }"
+      />
     </div>
   </div>
 </template>
@@ -74,6 +104,14 @@ export default {
       menuOpen: false,
       menuHovered: false,
       dismissTimeout: null,
+      iconHidden: false,
+      logoHidden: false,
+      iconFadeTimeout: null,
+      iconShowTimeout: null,
+      logoFadeTimeout: null,
+      fabSpinning: false,
+      logoPlaceholderHovered: false,
+      hoverMenuTimeout: null,
       user: {
         loggedIn: false,
         meta: {},
@@ -97,6 +135,19 @@ export default {
       this.menuOpen = !this.menuOpen;
       if (!this.menuOpen) {
         this.menuHovered = false;
+        // Restart logo fade timeout when menu closes
+        if (this.logoFadeTimeout) {
+          clearTimeout(this.logoFadeTimeout);
+        }
+        this.logoFadeTimeout = setTimeout(() => {
+          this.logoHidden = true;
+        }, 3000);
+      } else {
+        // Clear logo fade timeout when menu opens
+        if (this.logoFadeTimeout) {
+          clearTimeout(this.logoFadeTimeout);
+        }
+        this.logoHidden = false;
       }
     },
     handleMouseLeave() {
@@ -128,6 +179,13 @@ export default {
     handleAddClick() {
       this.createPin();
       this.menuOpen = false;
+    },
+    handleFabClick() {
+      this.fabSpinning = true;
+      setTimeout(() => {
+        this.fabSpinning = false;
+        this.createPin();
+      }, 400);
     },
     handleSearchClick() {
       this.$router.push({ name: 'search' });
@@ -196,16 +254,120 @@ export default {
         },
       );
     },
+    handleScroll() {
+      // === FAB behavior: hide on scroll, show 500ms after scroll stops ===
+      // Clear show timeout if scrolling again
+      if (this.iconShowTimeout) {
+        clearTimeout(this.iconShowTimeout);
+        this.iconShowTimeout = null;
+      }
+      // Hide FAB immediately on scroll start
+      if (!this.iconHidden) {
+        this.iconHidden = true;
+      }
+      // Show FAB 500ms after scroll stops
+      this.iconShowTimeout = setTimeout(() => {
+        this.iconHidden = false;
+      }, 500);
+
+      // === Logo behavior: show on scroll, hide 3s after scroll stops ===
+      this.logoHidden = false;
+      if (this.logoFadeTimeout) {
+        clearTimeout(this.logoFadeTimeout);
+      }
+      this.logoFadeTimeout = setTimeout(() => {
+        if (!this.menuOpen) {
+          this.logoHidden = true;
+        }
+      }, 3000);
+    },
+    showLogoOnHover() {
+      this.logoPlaceholderHovered = true;
+      this.logoHidden = false;
+      // Clear any pending fade timeout
+      if (this.logoFadeTimeout) {
+        clearTimeout(this.logoFadeTimeout);
+        this.logoFadeTimeout = null;
+      }
+      // Show menu on hover after a short delay
+      if (!this.menuOpen) {
+        this.hoverMenuTimeout = setTimeout(() => {
+          if (this.logoPlaceholderHovered && !this.menuOpen) {
+            this.menuOpen = true;
+          }
+        }, 300);
+      }
+    },
+    showMenuOnHover() {
+      // Show menu on hover after a short delay
+      if (!this.menuOpen) {
+        if (this.hoverMenuTimeout) {
+          clearTimeout(this.hoverMenuTimeout);
+        }
+        this.hoverMenuTimeout = setTimeout(() => {
+          if (!this.menuOpen) {
+            this.menuOpen = true;
+          }
+        }, 300);
+      }
+    },
+    handleLogoPlaceholderLeave() {
+      this.logoPlaceholderHovered = false;
+      // Clear hover menu timeout
+      if (this.hoverMenuTimeout) {
+        clearTimeout(this.hoverMenuTimeout);
+        this.hoverMenuTimeout = null;
+      }
+      // Only hide logo if menu is not open
+      if (!this.menuOpen) {
+        if (this.logoFadeTimeout) {
+          clearTimeout(this.logoFadeTimeout);
+        }
+        this.logoFadeTimeout = setTimeout(() => {
+          if (!this.menuOpen && !this.logoPlaceholderHovered) {
+            this.logoHidden = true;
+          }
+        }, 3000);
+      }
+    },
+    handlePlaceholderClick() {
+      // If logo is hidden, show it and toggle menu
+      if (this.logoHidden) {
+        this.logoHidden = false;
+        this.$nextTick(() => {
+          this.toggleMenu();
+        });
+      }
+    },
   },
   beforeMount() {
     this.initializeUser();
     // Close menu when clicking outside
     document.addEventListener('click', this.handleClickOutside);
+    // Listen for scroll to show/hide icon
+    window.addEventListener('scroll', this.handleScroll);
+    // Hide logo after 3s on initial load
+    this.logoFadeTimeout = setTimeout(() => {
+      this.logoHidden = true;
+    }, 3000);
   },
   beforeDestroy() {
     document.removeEventListener('click', this.handleClickOutside);
+    window.removeEventListener('scroll', this.handleScroll);
     if (this.dismissTimeout) {
       clearTimeout(this.dismissTimeout);
+    }
+    if (this.iconFadeTimeout) {
+      clearTimeout(this.iconFadeTimeout);
+    }
+    if (this.iconShowTimeout) {
+      clearTimeout(this.iconShowTimeout);
+    }
+    if (this.logoFadeTimeout) {
+      clearTimeout(this.logoFadeTimeout);
+    }
+    if (this.hoverMenuTimeout) {
+      clearTimeout(this.hoverMenuTimeout);
     }
   },
 };
@@ -226,10 +388,18 @@ export default {
   z-index: 1000;
 }
 
-.nav-icon-container {
+.logo-placeholder {
   position: fixed;
   top: 20px;
   left: 20px;
+  width: 48px;
+  height: 48px;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+.nav-icon-container {
+  position: relative;
   cursor: pointer;
   z-index: 1001;
 }
@@ -306,6 +476,76 @@ export default {
   100% {
     opacity: 0;
     transform: translateY(-20px) scale(0.9);
+  }
+}
+
+// Fade transition for logo and FAB
+.fade-enter-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-leave-to {
+  opacity: 0;
+}
+
+// FAB Add Pin Button
+.fab-add-pin {
+  position: fixed;
+  bottom: 36px;
+  right: 36px;
+  width: 64px;
+  height: 64px;
+  background-color: #ff42ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 30;
+  box-shadow: 0 4px 12px rgba(255, 66, 255, 0.4);
+  transition: background-color 0.2s ease, opacity 0.3s ease;
+  opacity: 1;
+
+  &.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:hover {
+    background-color: #ff66ff;
+
+    .fab-icon {
+      transform: scaleX(-1) rotate(45deg);
+    }
+  }
+}
+
+.fab-icon {
+  width: 48px;
+  height: 48px;
+  transform: scaleX(-1);
+  filter: grayscale(1) brightness(0.12);
+  transition: transform 0.2s ease;
+
+  &.is-spinning {
+    animation: spinAccel 0.4s cubic-bezier(0.2, 0, 1, 1) forwards;
+  }
+}
+
+@keyframes spinAccel {
+  0% {
+    transform: scaleX(-1) rotate(0deg);
+  }
+  100% {
+    transform: scaleX(-1) rotate(720deg);
   }
 }
 </style>
