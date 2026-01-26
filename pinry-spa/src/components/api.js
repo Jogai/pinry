@@ -116,7 +116,7 @@ function fetchPins(offset, tagFilter, userFilter, boardFilter) {
   const queryArgs = {
     format: 'json',
     ordering: '-id',
-    limit: 30,
+    limit: 48,
     offset,
   };
   if (tagFilter) queryArgs.tags__name = tagFilter;

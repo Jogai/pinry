@@ -95,11 +95,24 @@ This document tracks UI changes, design decisions, and component notes for the P
 ## Add pin
 - there is a button in the lower right corner for adding a pin
 - it should use the same image as the icon in the upper left...
-except it should be flipped on horizontal and it should be WHITE on a pink #ff42ff background. Clicking/tapping it will trigger the new pin modal. it should have a slightly lighter mouseover state.
+except it should be flipped on horizontal and it should be #1a1a1a (dark) on a pink #ff42ff background. Clicking/tapping it will trigger the new pin modal. it should have a slightly lighter mouseover state.
 - this is similar to the Material design UX paradigm.
-- with this addition, the icon/logo in upper left should fade out after 3s on load and reappear on scroll then fade out again after 3s of no scroll.
 - Icon size: 48px, container: 64px
 - Inset 36px from browser edges (bottom-right)
 - On hover: rotate 45° counterclockwise
-- On click: spin 360° with acceleration (100ms), then show add modal after spin completes 
+- On click: spin 720° (2 rotations) with acceleration like a cartoon propeller starting up (400ms, cubic-bezier(0.2, 0, 1, 1)), then show add modal after spin completes
+- FAB hides on scroll (200ms delay), fades back in 500ms after scroll stops (0.2s ease fade)
+- Logo/icon in upper left: shows on scroll, fades out after 3s of no scroll (also 3s after initial page load)
+
+## Pin Preview (Mobile)
+- On mobile (≤768px), all overlays (actions, meta, description, nav arrows) are hidden by default
+- Tap image to toggle overlay visibility
+- Swipe left/right still works for navigation
+
+## Modals
+- 8px rounded corners
+- Title uses Rubik font @ 2.25em
+
+## Data
+- Fetch 48 pins at a time
 

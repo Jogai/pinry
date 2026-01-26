@@ -163,14 +163,23 @@ a {
 
 .modal-card {
   background-color: $dark-surface !important;
-  
+  border-radius: 8px !important;
+  overflow: hidden;
+
   .modal-card-head,
   .modal-card-foot {
     background-color: $dark-surface-elevated !important;
     border-color: $dark-border !important;
     color: $dark-text !important;
   }
-  
+
+  .modal-card-head {
+    .modal-card-title {
+      font-family: 'Rubik', sans-serif !important;
+      font-size: 2.25em !important;
+    }
+  }
+
   .modal-card-body {
     background-color: $dark-surface !important;
     color: $dark-text !important;

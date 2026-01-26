@@ -1,9 +1,9 @@
 <template>
   <div class="pin-preview-modal" @mouseenter="showActions" @mouseleave="hideActions" @keydown="handleKeydown">
-    <div class="pin-preview-image-container" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
+    <div class="pin-preview-image-container" @touchstart="handleTouchStart" @touchend="handleTouchEnd" @click="handleImageTap">
       <img :src="pinItem.large_image_url" alt="Image" class="pin-preview-image">
       <transition name="fade">
-        <div v-if="actionsVisible" class="pin-preview-actions">
+        <div v-if="(isMobile && mobileOverlayVisible) || (!isMobile && actionsVisible)" class="pin-preview-actions">
           <a :href="pinItem.referer || '#'" target="_blank" class="action-item" :class="{ 'action-item-disabled': !pinItem.referer }">
             <b-icon icon="web" custom-size="mdi-16px"></b-icon>
           </a>
@@ -16,7 +16,7 @@
         </div>
       </transition>
       <transition name="fade">
-        <div v-if="metaVisible" class="pin-preview-meta">
+        <div v-if="(isMobile && mobileOverlayVisible) || (!isMobile && metaVisible)" class="pin-preview-meta">
           <b-icon icon="account" custom-size="mdi-14px" class="user-icon"></b-icon>
           <span class="username">{{ pinItem.author }}</span>
           <template v-if="pinItem.tags.length > 0">
@@ -27,7 +27,7 @@
         </div>
       </transition>
       <transition name="fade">
-        <div v-if="metaVisible && (pinItem.description || pinItem.referer)" class="pin-preview-description">
+        <div v-if="((isMobile && mobileOverlayVisible) || (!isMobile && metaVisible)) && (pinItem.description || pinItem.referer)" class="pin-preview-description">
           <p v-if="pinItem.description" class="description" v-html="niceLinks(pinItem.description)"></p>
           <a v-if="pinItem.referer" :href="pinItem.referer" target="_blank" class="source-link">
             <b-icon icon="web" custom-size="mdi-14px"></b-icon>
@@ -35,7 +35,7 @@
         </div>
       </transition>
       <transition name="fade">
-        <div v-if="actionsVisible" class="pin-preview-navigation">
+        <div v-if="(isMobile && mobileOverlayVisible) || (!isMobile && actionsVisible)" class="pin-preview-navigation">
           <button
             v-if="canNavigatePrevious"
             class="nav-arrow nav-arrow-left"
@@ -72,6 +72,9 @@ export default {
       metaTimeout: null,
       touchStartX: 0,
       touchEndX: 0,
+      mobileOverlayVisible: false,
+      isMobile: false,
+      wasSwipe: false,
     };
   },
   computed: {
@@ -86,6 +89,9 @@ export default {
     // Focus the modal to capture keyboard events
     this.$el.focus();
     this.$el.setAttribute('tabindex', '0');
+    // Detect mobile
+    this.checkMobile();
+    window.addEventListener('resize', this.checkMobile);
   },
   beforeDestroy() {
     if (this.actionsTimeout) {
@@ -94,6 +100,7 @@ export default {
     if (this.metaTimeout) {
       clearTimeout(this.metaTimeout);
     }
+    window.removeEventListener('resize', this.checkMobile);
   },
   methods: {
     handleKeydown(event) {
@@ -135,6 +142,7 @@ export default {
       const diff = this.touchStartX - this.touchEndX;
 
       if (Math.abs(diff) > swipeThreshold) {
+        this.wasSwipe = true;
         if (diff > 0) {
           // Swipe left - next pin
           this.navigatePin(1);
@@ -142,6 +150,8 @@ export default {
           // Swipe right - previous pin
           this.navigatePin(-1);
         }
+      } else {
+        this.wasSwipe = false;
       }
     },
     showActions() {
@@ -169,6 +179,15 @@ export default {
       );
     },
     niceLinks,
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 768;
+    },
+    handleImageTap() {
+      if (this.isMobile && !this.wasSwipe) {
+        this.mobileOverlayVisible = !this.mobileOverlayVisible;
+      }
+      this.wasSwipe = false;
+    },
   },
 };
 </script>
