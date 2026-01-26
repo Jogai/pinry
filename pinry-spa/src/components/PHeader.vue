@@ -155,14 +155,14 @@ export default {
       if (!this.menuHovered) {
         this.dismissTimeout = setTimeout(() => {
           this.menuOpen = false;
-        }, 700);
+        }, 1500);
       }
     },
     handleMenuLeave() {
       this.menuHovered = false;
       this.dismissTimeout = setTimeout(() => {
         this.menuOpen = false;
-      }, 700);
+      }, 1500);
     },
     keepMenuOpen() {
       this.menuHovered = true;
@@ -284,6 +284,11 @@ export default {
     showLogoOnHover() {
       this.logoPlaceholderHovered = true;
       this.logoHidden = false;
+      // Clear any pending dismiss timeout
+      if (this.dismissTimeout) {
+        clearTimeout(this.dismissTimeout);
+        this.dismissTimeout = null;
+      }
       // Clear any pending fade timeout
       if (this.logoFadeTimeout) {
         clearTimeout(this.logoFadeTimeout);
@@ -299,6 +304,11 @@ export default {
       }
     },
     showMenuOnHover() {
+      // Clear any pending dismiss timeout
+      if (this.dismissTimeout) {
+        clearTimeout(this.dismissTimeout);
+        this.dismissTimeout = null;
+      }
       // Show menu on hover after a short delay
       if (!this.menuOpen) {
         if (this.hoverMenuTimeout) {
