@@ -1,3 +1,5 @@
+![Pinstle Logo](https://www.whistlehog.com/pinstle-saver-ios/PinstleLogo@2x.png)
+
 # Pinry (Pinstle Fork)
 
 A tiling image board system for people who want to save, tag, and share images, videos and webpages in an easy to skim through format.
