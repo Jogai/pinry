@@ -1,103 +1,112 @@
 <template>
   <div class="pin-create-modal">
-    <div>
-      <div class="modal-card" style="width: auto">
-        <header class="modal-card-head">
-          <p class="modal-card-title">{{ $t(editorMeta.title) }}</p>
-        </header>
-        <section class="modal-card-body">
-          <div class="columns">
-            <div class="column">
-              <FileUpload
-                :previewImageURL="pinModel.form.url.value"
-                v-on:imageUploadSucceed="onUploadDone"
-                v-on:imageUploadProcessing="onUploadProcessing"
-              ></FileUpload>
-              <div class="description" v-show="pinModel.form.description.value" v-html="niceLinks(pinModel.form.description.value)"></div>
-            </div>
-            <div class="column">
-              <b-field v-bind:label="$t('imageUrlLabel')"
-                       v-show="!disableUrlField && !isEdit"
-                       :type="pinModel.form.url.type"
-                       :message="pinModel.form.url.error">
-                <b-input
-                  type="text"
-                  v-model="pinModel.form.url.value"
-                  v-bind:placeholder="$t('pinCreateModalImageURLPlaceholder')"
-                  maxlength="2048"
-                >
-                </b-input>
-              </b-field>
-              <b-field v-bind:label="$t('privacyOptionLabel')"
-                       :type="pinModel.form.private.type"
-                       :message="pinModel.form.private.error">
-                <b-checkbox v-model="pinModel.form.private.value">
-                    {{ $t("isPrivateCheckbox") }}
-                </b-checkbox>
-              </b-field>
-              <b-field v-bind:label="$t('imageSourceLabel')"
-                       :type="pinModel.form.referer.type"
-                       :message="pinModel.form.referer.error">
-                <b-input
-                  type="text"
-                  v-model="pinModel.form.referer.value"
-                  v-bind:placeholder="$t('pinCreateModalImageSourcePlaceholder')"
-                  maxlength="2048"
-                >
-                </b-input>
-              </b-field>
-              <b-field v-bind:label="$t('tagsLabel')">
-                <b-taginput
-                    v-model="pinModel.form.tags.value"
-                    :data="editorMeta.filteredTagOptions"
-                    autocomplete
-                    ellipsis
-                    icon="label"
-                    :allow-new="true"
-                    v-bind:placeholder="$t('pinCreateModalImageTagsPlaceholder')"
-                    @typing="getFilteredTags">
-                  <template slot-scope="props">
-                    <strong>{{ props.option }}</strong>
-                  </template>
-                  <template slot="empty">
-                    {{ $t("pinCreateModalEmptySlot") }}
-                  </template>
-                </b-taginput>
-              </b-field>
-              <b-field v-bind:label="$t('descriptionLabel')"
-                       :type="pinModel.form.description.type"
-                       :message="pinModel.form.description.error">
-                <b-input
-                  type="textarea"
-                  v-model="pinModel.form.description.value"
-                  v-bind:placeholder="$t('pinCreateModalImageDescriptionPlaceholder')"
-                  maxlength="1024"
-                >
-                </b-input>
-              </b-field>
-            </div>
-            <div class="column" v-if="!isEdit">
-              <FilterSelect
-                :allOptions="boardOptions"
-                v-on:selected="onSelectBoard"
-              ></FilterSelect>
-            </div>
-          </div>
-        </section>
-        <footer class="modal-card-foot">
-          <button class="button" type="button" @click="$parent.close()">{{ $t("closeButton") }}</button>
-          <button
-            v-if="!isEdit"
-            @click="createPin"
-            class="button is-primary">{{ $t("pinCreateModalCreatePinButton") }}
-          </button>
-          <button
-            v-if="isEdit"
-            @click="savePin"
-            class="button is-primary">{{ $t("pinCreateModalSaveChangesButton") }}
-          </button>
-        </footer>
-      </div>
+    <div class="modal-card">
+      <!-- Header with title and private checkbox -->
+      <header class="modal-card-head">
+        <p class="modal-card-title">{{ $t(editorMeta.title) }}</p>
+        <b-checkbox v-model="pinModel.form.private.value">
+          {{ $t("isPrivateCheckbox") }}
+        </b-checkbox>
+      </header>
+
+      <section class="modal-card-body">
+        <!-- Upload Zone -->
+        <FileUpload
+          :previewImageURL="pinModel.form.url.value"
+          v-on:imageUploadSucceed="onUploadDone"
+          v-on:imageUploadProcessing="onUploadProcessing"
+        ></FileUpload>
+
+        <!-- Form Fields -->
+        <div class="form-fields">
+          <b-field :label="$t('imageUrlLabel')"
+                   v-show="!disableUrlField && !isEdit"
+                   :type="pinModel.form.url.type"
+                   :message="pinModel.form.url.error"
+                   horizontal>
+            <b-input
+              type="text"
+              v-model="pinModel.form.url.value"
+              :placeholder="$t('pinCreateModalImageURLPlaceholder')"
+              maxlength="2048"
+            ></b-input>
+          </b-field>
+
+          <b-field :label="$t('imageSourceLabel')"
+                   :type="pinModel.form.referer.type"
+                   :message="pinModel.form.referer.error"
+                   horizontal>
+            <b-input
+              type="text"
+              v-model="pinModel.form.referer.value"
+              :placeholder="$t('pinCreateModalImageSourcePlaceholder')"
+              maxlength="2048"
+            ></b-input>
+          </b-field>
+
+          <b-field :label="$t('tagsLabel')" horizontal>
+            <b-taginput
+                v-model="pinModel.form.tags.value"
+                :data="editorMeta.filteredTagOptions"
+                autocomplete
+                ellipsis
+                icon="label"
+                :allow-new="true"
+                :placeholder="$t('pinCreateModalImageTagsPlaceholder')"
+                @typing="getFilteredTags">
+              <template slot-scope="props">
+                <strong>{{ props.option }}</strong>
+              </template>
+              <template slot="empty">
+                {{ $t("pinCreateModalEmptySlot") }}
+              </template>
+            </b-taginput>
+          </b-field>
+
+          <b-field :label="$t('descriptionLabel')"
+                   :type="pinModel.form.description.type"
+                   :message="pinModel.form.description.error"
+                   horizontal>
+            <b-input
+              type="text"
+              v-model="pinModel.form.description.value"
+              :placeholder="$t('pinCreateModalImageDescriptionPlaceholder')"
+              maxlength="1024"
+            ></b-input>
+          </b-field>
+
+          <b-field :label="$t('selectBoardLabel')" v-if="!isEdit" horizontal>
+            <b-taginput
+                v-model="selectedBoardNames"
+                :data="filteredBoardNames"
+                autocomplete
+                ellipsis
+                :allow-new="true"
+                :placeholder="$t('filterSelectSelectBoardPlaceholder')"
+                @typing="getFilteredBoards">
+              <template slot-scope="props">
+                <span>{{ props.option }}</span>
+              </template>
+              <template slot="empty">
+                {{ $t("pinCreateModalEmptySlot") }}
+              </template>
+            </b-taginput>
+          </b-field>
+        </div>
+      </section>
+
+      <footer class="modal-card-foot">
+        <button
+          v-if="!isEdit"
+          @click="createPin"
+          class="button is-primary">{{ $t("pinCreateModalCreatePinButton") }}
+        </button>
+        <button
+          v-if="isEdit"
+          @click="savePin"
+          class="button is-primary">{{ $t("pinCreateModalSaveChangesButton") }}
+        </button>
+      </footer>
     </div>
   </div>
 </template>
@@ -105,7 +114,6 @@
 <script>
 import API from '../api';
 import FileUpload from './FileUpload.vue';
-import FilterSelect from './FilterSelect.vue';
 import bus from '../utils/bus';
 import ModelForm from '../utils/ModelForm';
 import Loading from '../utils/Loading';
@@ -141,7 +149,6 @@ export default {
   },
   components: {
     FileUpload,
-    FilterSelect,
   },
   data() {
     const pinModel = ModelForm.fromFields(fields);
@@ -152,14 +159,27 @@ export default {
       formUpload: {
         imageId: null,
       },
-      boardId: null,
       boardOptions: [],
       tagOptions: [],
+      selectedBoardNames: [],
+      filteredBoardNames: [],
       editorMeta: {
         title: 'NewPinTitle',
         filteredTagOptions: [],
       },
     };
+  },
+  computed: {
+    boardIds() {
+      const ids = [];
+      this.selectedBoardNames.forEach((name) => {
+        const board = this.boardOptions.find(b => b.name === name);
+        if (board) {
+          ids.push(board.value);
+        }
+      });
+      return ids;
+    },
   },
   created() {
     this.fetchBoardList();
@@ -200,6 +220,11 @@ export default {
       );
       this.editorMeta.filteredTagOptions = filteredTagOptions;
     },
+    getFilteredBoards(text) {
+      this.filteredBoardNames = this.boardOptions
+        .filter(b => b.name.toLowerCase().includes(text.toLowerCase()))
+        .map(b => b.name);
+    },
     fetchBoardList() {
       API.Board.fetchFullList(this.username).then(
         (resp) => {
@@ -211,14 +236,12 @@ export default {
             },
           );
           this.boardOptions = boardOptions;
+          this.filteredBoardNames = boardOptions.map(b => b.name);
         },
         () => {
           console.log('Error occurs while fetch board full list');
         },
       );
-    },
-    onSelectBoard(boardIds) {
-      this.boardIds = boardIds;
     },
     onUploadProcessing() {
       this.disableUrlField = true;
@@ -266,8 +289,7 @@ export default {
             loading.close();
           }
           bus.bus.$emit(bus.events.refreshPin);
-          if (self.boardIds) {
-            // FIXME(winkidney): Should handle error for add-to board
+          if (self.boardIds && self.boardIds.length > 0) {
             self.boardIds.forEach(
               (boardId) => {
                 promises.push(API.Board.addToBoard(boardId, [resp.data.id]));
@@ -289,3 +311,81 @@ export default {
   },
 };
 </script>
+
+<style lang="scss" scoped>
+.pin-create-modal {
+  .modal-card {
+    width: 560px;
+    max-width: 95vw;
+  }
+
+  .modal-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+    padding: 60px 30px 20px;
+    background-color: #2d2d2d !important;
+  }
+
+  .modal-card-body {
+    padding: 0 30px 30px;
+  }
+
+  // Full width file upload with 10px margin from modal edges
+  ::v-deep .image-upload {
+    margin: 0 -8px;
+    padding: 0 12px;
+
+    .upload {
+      position: static;
+      display: block;
+    }
+  }
+
+  .form-fields {
+    margin-top: 1.5rem;
+    padding: 0 50px;
+  }
+
+  // Wider label column
+  ::v-deep .field.is-horizontal .field-label {
+    flex-basis: 120px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    text-align: right;
+    margin-right: 1rem;
+  }
+
+  // Rounded form inputs with lighter border
+  ::v-deep .input,
+  ::v-deep .taginput .taginput-container {
+    border-radius: 9999px;
+    border-color: #555 !important;
+
+    &::placeholder {
+      color: #777 !important;
+    }
+  }
+
+  ::v-deep .taginput .taginput-container input::placeholder {
+    color: #777 !important;
+  }
+
+  // Hot pink rounded button
+  .modal-card-foot .button.is-primary {
+    background-color: #ff42ff !important;
+    border-color: #ff42ff !important;
+    border-radius: 9999px;
+    padding-left: 2em;
+    padding-right: 2em;
+  }
+
+  .modal-card-foot {
+    justify-content: flex-end;
+    border-top: none;
+    padding: 0 30px 30px;
+    background-color: #2d2d2d !important;
+  }
+}
+</style>

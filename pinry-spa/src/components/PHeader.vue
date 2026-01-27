@@ -395,7 +395,7 @@ export default {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1000;
+  z-index: 30;
 }
 
 .logo-placeholder {
@@ -519,7 +519,7 @@ export default {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 30;
+  z-index: 20;
   box-shadow: 0 4px 12px rgba(255, 66, 255, 0.4);
   transition: background-color 0.2s ease, opacity 0.3s ease;
   opacity: 1;
@@ -542,7 +542,7 @@ export default {
   width: 48px;
   height: 48px;
   transform: scaleX(-1);
-  filter: grayscale(1) brightness(0.12);
+  filter: grayscale(1) brightness(0.25);
   transition: transform 0.2s ease;
 
   &.is-spinning {
