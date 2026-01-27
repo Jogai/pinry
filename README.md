@@ -1,6 +1,50 @@
-# pinry
+# Pinry (Pinstle Fork)
 
 A tiling image board system for people who want to save, tag, and share images, videos and webpages in an easy to skim through format.
+
+This is a heavily modified fork of [Pinry](https://github.com/pinry/pinry) with a modernized dark theme UI and various improvements.
+
+**iOS App:** [Pinstle on the App Store](https://apps.apple.com/us/app/pinstle/id6754937420)
+**Android App:** [Pinstle APK](https://github.com/sciamop/pinry-saver-android/releases/tag/v1.0.3)
+**Firefox Extension:** [Pinry Saver](https://addons.mozilla.org/en-US/firefox/addon/pinry-saver/)
+
+![Main View](https://pinry.whistlehog.com/media/7/4/740bf5af9ff48c417afae3dbbd7c374a/Screenshot_2026-01-27_main.jpg)
+
+![Add Pin Modal](https://pinry.whistlehog.com/media/d/9/d939a14e530a492dc464a43e2f530e07/Screenshot_2026-01-27_155055.jpg)
+
+## What's Different in This Fork
+
+### Dark Theme UI Overhaul
+- Complete dark theme redesign (#1a1a1a background, #2d2d2d surfaces)
+- Hot pink accent color (#ff42ff) throughout
+- Rubik font for headings, Open Sans for body text
+- Fully rounded (pill-shaped) form inputs and buttons
+
+### Redesigned Add Pin Modal
+- Clean single-column layout
+- Horizontal form fields with labels on the left
+- Integrated board selection with tag-style input
+- Private checkbox in header row
+- Streamlined upload drop zone
+
+### New Floating Action Button (FAB)
+- Hot pink FAB in bottom-right corner for quick pin creation
+- Animated logo icon on hover
+- Auto-hides below modals
+
+### Pin Preview Improvements
+- Enhanced hover states and transitions
+- Better image handling
+- Improved edit/delete controls
+
+### Security Fixes
+- Various security hardening measures
+- Updated dependencies
+
+### Infrastructure
+- Production-ready docker-compose.yml
+- Updated Poetry dependencies
+- Python 3.9-3.12 compatibility
 
 ## Development Setup
 
