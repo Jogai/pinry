@@ -11,8 +11,5 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
     volumes:
-      - /var/lib/docker/volumes/2f2434a82a88a1b64219c8bb6f59751581bcc4ff2eca9a81b5d2e53866873cc2:/data
+      - /srv/pinry:/data
     restart: unless-stopped
-
-volumes:
-  pinry_data:

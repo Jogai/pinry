@@ -1,4 +1,4 @@
---index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+--index-url https://pypi.org/simple
 
 certifi==2022.5.18.1 ; python_version >= "3.7" \
     --hash=sha256:9c5705e395cd70084351dd8ad5c41e65655e08ce46f2ec9cf6c2c08390f71eb7 \
