@@ -1,17 +1,17 @@
 version: '3.8'
 
 services:
-  pinry:
+  pinstle:
     build:
       context: .
-      dockerfile: docker/Dockerfile.autobuild
+      dockerfile: Dockerfile.autobuild
     ports:
-      - "80:80"
+      - "9002:80"
     environment:
-      - SECRET_KEY=${SECRET_KEY:-change-me-to-a-real-secret-key}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
     volumes:
-      - pinry_data:/data
+      - /var/lib/docker/volumes/2f2434a82a88a1b64219c8bb6f59751581bcc4ff2eca9a81b5d2e53866873cc2:/data
     restart: unless-stopped
 
 volumes:

@@ -22,7 +22,7 @@ RUN pnpm build
 
 
 # Required for other database options
-FROM python:3.9.12-slim-buster as base
+FROM python:3.9-slim-bookworm as base
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
@@ -32,7 +32,7 @@ RUN pip --no-cache-dir install --user mysqlclient cx-Oracle
 
 
 # Final image
-FROM python:3.9.12-slim-buster
+FROM python:3.9-slim-bookworm
 ARG DEBIAN_FRONTEND=noninteractive
 
 WORKDIR pinry
