@@ -1,7 +1,40 @@
 <template>
   <div class="pins">
+    <!-- Layout toggle button -->
+    <div
+      class="layout-toggle-placeholder"
+      @mouseenter="showToggleOnHover"
+      @mouseleave="hideToggleOnHover"
+    >
+      <transition name="fade">
+        <div v-if="!toggleHidden" class="layout-toggle-control">
+          <button
+            class="layout-toggle-btn"
+            :class="{ active: layoutMode === 'masonry' }"
+            @click="setLayoutMode('masonry')"
+            title="Masonry view"
+          >
+            <img src="/img/icons/mortar-icon.png" alt="Masonry" class="toggle-icon toggle-icon-img" />
+          </button>
+          <button
+            class="layout-toggle-btn"
+            :class="{ active: layoutMode === 'single' }"
+            @click="setLayoutMode('single')"
+            title="FFFFound view"
+          >
+            <svg class="toggle-icon toggle-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="1" width="14" height="5" rx="1" />
+              <rect x="5" y="8" width="14" height="8" rx="1" />
+              <rect x="5" y="18" width="14" height="5" rx="1" />
+            </svg>
+          </button>
+        </div>
+      </transition>
+    </div>
+
     <section class="section">
-      <div id="pins-container" class="container" v-if="blocks">
+      <!-- Masonry layout -->
+      <div id="pins-container" class="container" v-if="blocks && layoutMode === 'masonry'">
         <div
           v-masonry=""
           transition-duration="0.3s"
@@ -42,6 +75,40 @@
           </template>
         </div>
       </div>
+
+      <!-- Single-column FFFFound layout -->
+      <div class="single-column-container" v-if="blocks && layoutMode === 'single'">
+        <div
+          v-for="item in blocks"
+          :key="item.id"
+          class="single-column-item"
+          :class="{ 'image-loaded': item.singleLoaded }"
+        >
+          <div
+            @mouseenter="showEditButtons(item.id)"
+            @mouseleave="hideEditButtons(item.id)"
+          >
+            <transition name="fade">
+              <EditorUI
+                v-if="shouldShowEdit(item.id)"
+                :pin="item"
+                :currentUsername="editorMeta.user.meta.username"
+                :currentBoard="editorMeta.currentBoard"
+                v-on:pin-delete-succeed="reset"
+                v-on:pin-remove-from-board-succeed="reset"
+              ></EditorUI>
+            </transition>
+            <img
+              :src="item.large_image_url"
+              @load="onSingleImageLoaded(item.id)"
+              @click="openPreview(item)"
+              :alt="item.description"
+              class="single-column-image"
+            />
+          </div>
+        </div>
+      </div>
+
       <loadingSpinner v-bind:show="status.loading"></loadingSpinner>
     </section>
   </div>
@@ -83,6 +150,10 @@ function initialData() {
   return {
     blocks: [],
     blocksMap: {},
+    layoutMode: localStorage.getItem('pinry-layout-mode') || 'masonry',
+    toggleHidden: true,
+    toggleFadeTimeout: null,
+    togglePlaceholderHovered: false,
     status: {
       loading: false,
       hasNext: true,
@@ -137,6 +208,45 @@ export default {
     },
     hideEditButtons() {
       this.editorMeta.currentEditId = null;
+    },
+    setLayoutMode(mode) {
+      this.layoutMode = mode;
+      localStorage.setItem('pinry-layout-mode', mode);
+    },
+    handleToggleScroll() {
+      this.toggleHidden = false;
+      if (this.toggleFadeTimeout) {
+        clearTimeout(this.toggleFadeTimeout);
+      }
+      this.toggleFadeTimeout = setTimeout(() => {
+        if (!this.togglePlaceholderHovered) {
+          this.toggleHidden = true;
+        }
+      }, 3000);
+    },
+    showToggleOnHover() {
+      this.togglePlaceholderHovered = true;
+      this.toggleHidden = false;
+      if (this.toggleFadeTimeout) {
+        clearTimeout(this.toggleFadeTimeout);
+        this.toggleFadeTimeout = null;
+      }
+    },
+    hideToggleOnHover() {
+      this.togglePlaceholderHovered = false;
+      if (this.toggleFadeTimeout) {
+        clearTimeout(this.toggleFadeTimeout);
+      }
+      this.toggleFadeTimeout = setTimeout(() => {
+        if (!this.togglePlaceholderHovered) {
+          this.toggleHidden = true;
+        }
+      }, 3000);
+    },
+    onSingleImageLoaded(itemId) {
+      if (this.blocksMap[itemId]) {
+        this.$set(this.blocksMap[itemId], 'singleLoaded', true);
+      }
     },
     onPinImageLoaded(itemId) {
       this.blocksMap[itemId].class = {
@@ -300,6 +410,18 @@ export default {
     bus.bus.$on(bus.events.refreshPin, this.reset);
     this.registerScrollEvent();
     this.initialize();
+    window.addEventListener('scroll', this.handleToggleScroll);
+    // Show toggle briefly on load, then hide after 3s
+    this.toggleHidden = false;
+    this.toggleFadeTimeout = setTimeout(() => {
+      this.toggleHidden = true;
+    }, 3000);
+  },
+  beforeDestroy() {
+    window.removeEventListener('scroll', this.handleToggleScroll);
+    if (this.toggleFadeTimeout) {
+      clearTimeout(this.toggleFadeTimeout);
+    }
   },
 };
 </script>
@@ -359,6 +481,91 @@ $avatar-height: 30px;
 
 .fade-enter, .fade-leave-to {
   opacity: 0;
+}
+
+/* Layout toggle button */
+.layout-toggle-placeholder {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 76px;
+  height: 32px;
+  z-index: 20;
+  cursor: pointer;
+}
+
+.layout-toggle-control {
+  display: flex;
+  background-color: #000002;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.layout-toggle-btn {
+  height: 32px;
+  border: none;
+  background: transparent;
+  padding: 0 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+
+  &.active {
+    background-color: rgba(255, 66, 255, 0.15);
+  }
+}
+
+.toggle-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.toggle-icon-svg {
+  fill: #ffffff;
+
+  .active & {
+    fill: #ff42ff;
+  }
+}
+
+.toggle-icon-img {
+  /* White by default */
+  filter: brightness(0) invert(1);
+
+  .active & {
+    /* Hot pink #ff42ff */
+    filter: brightness(0) saturate(100%) invert(42%) sepia(99%) saturate(3000%) hue-rotate(280deg) brightness(105%) contrast(105%);
+  }
+}
+
+/* Single-column FFFFound layout */
+.single-column-container {
+  max-width: $pin-single-column-width;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.single-column-item {
+  margin-bottom: 24px;
+  border-radius: 8px;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.3s;
+  position: relative;
+
+  &.image-loaded {
+    opacity: 1;
+  }
+}
+
+.single-column-image {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+  cursor: zoom-in;
+  background-color: #2d2d2d;
 }
 
 </style>
