@@ -1,5 +1,6 @@
 # I have no idea
 *.iml
+*.env
 
 # local_settings
 local_settings.py
