@@ -138,6 +138,20 @@ class PinSerializer(serializers.HyperlinkedModelSerializer):
         pin = Pin.objects.create(submitter=submitter, image=image, **validated_data)
         if tags:
             pin.tags.set(*tags)
+        if not tags and getattr(settings, 'AUTO_TAG_ON_SAVE', False):
+            import threading
+            from core.auto_tagger import AutoTagger
+            def _auto_tag():
+                try:
+                    AutoTagger().tag_pin(pin)
+                except Exception:
+                    pass
+                finally:
+                    from django import db
+                    db.connection.close()
+            threading.Thread(
+                target=_auto_tag, daemon=True, name=f'auto-tag-{pin.pk}'
+            ).start()
         return pin
 
     def update(self, instance, validated_data):

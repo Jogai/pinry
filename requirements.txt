@@ -230,3 +230,9 @@ uritemplate==4.1.1 ; python_version >= "3.7" \
 urllib3==1.22 ; python_version >= "3.7" \
     --hash=sha256:06330f386d6e4b195fbfc736b297f58c5a892e4440e54d294d7004e3a9bbea1b \
     --hash=sha256:cc44da8e1145637334317feebd728bd869a35285b93cbb4cca2577da7e62db4f
+numpy==1.24.4 ; python_version >= "3.7" \
+    --hash=sha256:f3a86ed21e4f87050382c7bc96571755193c4c1392490744ac73d660e8f564a9 \
+    --hash=sha256:d11efb4dbecbdf22508d55e48d9c8384db795e1b7b51ea735289ff96613ff74d
+onnxruntime==1.16.3 ; python_version >= "3.7" \
+    --hash=sha256:4137e5d443e2dccebe5e156a47f1d6d66f8077b03587c35f11ee0c7eda98b533 \
+    --hash=sha256:c56695c1a343c7c008b647fff3df44da63741fbe7b6003ef576758640719be7b

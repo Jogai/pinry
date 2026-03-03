@@ -48,7 +48,7 @@ RUN groupadd -g 2300 tmpgroup \
 
 RUN apt-get update \
     # Install nginx
-    && apt-get -y  install nginx pwgen \
+    && apt-get -y  install nginx pwgen cron \
     # Install Pillow dependencies
     && apt-get -y install libopenjp2-7 libjpeg-turbo-progs libjpeg62-turbo-dev libtiff-dev libxcb1 \
     # Needed to compile psycopg2 on arm (fallback for psycopg2-binary)

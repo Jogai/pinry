@@ -223,3 +223,15 @@ CACHES = {
         'LOCATION': 'unique-snowflake',
     }
 }
+
+# Auto-tagging (core/auto_tagger.py)
+# Spawn a background thread to tag a pin immediately on creation.
+# Off by default: loading the ONNX model costs ~150 MB per gunicorn worker.
+AUTO_TAG_ON_SAVE = False
+# Minimum softmax confidence to accept a label (0–1).
+AUTO_TAG_CONFIDENCE_THRESHOLD = 0.20
+# Maximum tags applied per pin.
+AUTO_TAG_MAX_TAGS = 5
+# Directory to store the downloaded model and labels.
+# None → <MEDIA_ROOT>/../auto_tag_models  (or /data/auto_tag_models in Docker)
+AUTO_TAG_MODEL_DIR = None

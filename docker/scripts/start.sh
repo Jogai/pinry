@@ -26,6 +26,16 @@ fi
 # Fix all settings after all commands are run
 chown -R www-data:www-data /data
 
+# Auto-tag cron (daily at 3 AM UTC; set AUTO_TAG_CRON_ENABLED=false to disable)
+if [ "${AUTO_TAG_CRON_ENABLED:-true}" = "true" ]; then
+    SCHEDULE="${AUTO_TAG_CRON_SCHEDULE:-0 3 * * *}"
+    LIMIT="${AUTO_TAG_CRON_LIMIT:-500}"
+    printf '%s www-data cd /pinry && python manage.py auto_tag_pins --limit %s >> /data/auto_tag.log 2>&1\n' \
+        "${SCHEDULE}" "${LIMIT}" > /etc/cron.d/pinry-auto-tag
+    chmod 0644 /etc/cron.d/pinry-auto-tag
+    service cron start 2>/dev/null || true
+fi
+
 # start all process
 /usr/sbin/nginx
 
