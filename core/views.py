@@ -77,9 +77,31 @@ class TagAutoCompleteViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         )
 
 
+class TagViewSet(viewsets.GenericViewSet):
+    from core.permissions import SuperUserOnly
+    queryset = Tag.objects.all()
+    serializer_class = api.TagAutoCompleteSerializer
+    permission_classes = [SuperUserOnly]
+
+    from rest_framework.decorators import action
+    from rest_framework.response import Response
+
+    @action(detail=False, methods=['get', 'delete'], url_path='orphans')
+    def orphans(self, request):
+        from rest_framework.response import Response
+        orphans = Tag.objects.filter(taggit_taggeditem_items=None)
+        if request.method == 'GET':
+            return Response({'count': orphans.count(), 'tags': list(orphans.values_list('name', flat=True))})
+        deleted_names = list(orphans.values_list('name', flat=True))
+        count = orphans.count()
+        orphans.delete()
+        return Response({'deleted': count, 'tags': deleted_names})
+
+
 drf_router = routers.DefaultRouter()
 drf_router.register(r'pins', PinViewSet, basename="pin")
 drf_router.register(r'images', ImageViewSet)
 drf_router.register(r'boards', BoardViewSet, basename="board")
 drf_router.register(r'tags-auto-complete', TagAutoCompleteViewSet)
 drf_router.register(r'boards-auto-complete', BoardAutoCompleteViewSet, basename="board")
+drf_router.register(r'tags', TagViewSet, basename="tag")

@@ -111,3 +111,84 @@ pnpm serve
 - Django 2.2.x requires `setuptools` package for the `distutils` module (removed in Python 3.12)
 - `django-extensions` must be <4.0 to maintain Django 2.2 compatibility
 - `coreapi` shows a pkg_resources deprecation warning (harmless, can be ignored)
+
+## Docker Deployment
+
+```bash
+cp .env.example .env   # set SECRET_KEY and ALLOWED_HOSTS
+docker compose up -d
+```
+
+Data volume: `/srv/pinry/`. On first boot the container creates
+`/srv/pinry/local_settings.py` and generates a secret key.
+
+### Environment variables (`.env`)
+
+| Variable | Description |
+|---|---|
+| `SECRET_KEY` | Django secret key |
+| `ALLOWED_HOSTS` | Comma-separated hostnames/IPs (e.g. `192.168.1.10`) |
+
+### Remapping the media directory
+
+Add a second volume in `docker-compose.yml`:
+
+```yaml
+volumes:
+  - /srv/pinry:/data
+  - /mnt/data_0/_media:/data/static/media
+```
+
+### Getting an API token
+
+```bash
+docker compose exec pinstle python manage.py shell -c \
+  "from rest_framework.authtoken.models import Token; from django.contrib.auth import get_user_model; u = get_user_model().objects.get(username='YOUR_USER'); t, _ = Token.objects.get_or_create(user=u); print(t.key)"
+```
+
+---
+
+## RAM++ Auto-tagger (`scripts/clip_retag.py`)
+
+Re-tags all pins using [RAM++](https://github.com/xinyu1205/recognize-anything),
+an open-set image tagging model that generates tags freely without a fixed vocabulary.
+
+### Install
+
+```bash
+pip install git+https://github.com/xinyu1205/recognize-anything.git
+pip install "transformers==4.35.2" huggingface_hub torch Pillow requests
+```
+
+The RAM++ checkpoint (~1.7 GB) downloads automatically on first run to `~/.cache/huggingface/`.
+
+### Usage
+
+```bash
+# Tag all pins
+python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN
+
+# Preview without saving
+python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --dry-run
+
+# Tag a single pin
+python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --pin-id 42
+
+# Only process the first N pins
+python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --limit 50
+
+# List all tags currently in the database
+python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --dump-tags
+
+# Preview orphaned tags (no pins attached)
+python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --clean-orphans --dry-run
+
+# Delete orphaned tags (superuser token required)
+python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --clean-orphans
+```
+
+### Orphaned tags
+
+Each time pins are re-tagged, old tags are replaced. Tags that no longer have
+any pins attached accumulate in the database. The `--clean-orphans` flag calls
+`DELETE /api/v2/tags/orphans/` to remove them. This endpoint requires a superuser token.

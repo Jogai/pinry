@@ -49,3 +49,4 @@ local_settings.py
 
 # docker image data
 docker/data/*
+docker-compose.yml
