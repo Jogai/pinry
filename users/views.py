@@ -63,6 +63,12 @@ class UserViewSet(
         return User.objects.filter(id=self.request.user.id)
 
 
+@require_http_methods(["GET"])
+def site_settings(request):
+    data = {"allow_new_registrations": settings.ALLOW_NEW_REGISTRATIONS}
+    return HttpResponse(JSONRenderer().render(data), content_type="application/json")
+
+
 @require_http_methods(["POST"])
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_user(request):

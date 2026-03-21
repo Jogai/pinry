@@ -86,3 +86,51 @@ export default {
   },
 };
 </script>
+
+<style lang="scss" scoped>
+.login-modal {
+  .modal-card {
+    width: 400px;
+    max-width: 95vw;
+  }
+
+  .modal-card-head {
+    border-bottom: none;
+    padding: 40px 30px 20px;
+    background-color: #2d2d2d !important;
+  }
+
+  .modal-card-body {
+    padding: 0 30px 20px;
+    background-color: #2d2d2d !important;
+  }
+
+  ::v-deep .input {
+    border-radius: 9999px;
+    border-color: #555 !important;
+    background-color: transparent !important;
+
+    &::placeholder {
+      color: #777 !important;
+    }
+  }
+
+  .modal-card-foot {
+    justify-content: flex-end;
+    border-top: none;
+    padding: 0 30px 30px;
+    background-color: #2d2d2d !important;
+
+    .button {
+      border-radius: 9999px;
+      padding-left: 2em;
+      padding-right: 2em;
+    }
+
+    .button.is-primary {
+      background-color: #ff42ff !important;
+      border-color: #ff42ff !important;
+    }
+  }
+}
+</style>

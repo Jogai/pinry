@@ -32,6 +32,47 @@
       </transition>
     </div>
 
+    <div
+      class="inline-search-placeholder"
+      @mouseenter="showToggleOnHover"
+      @mouseleave="hideToggleOnHover"
+    >
+      <transition name="fade">
+        <div v-if="!toggleHidden" class="inline-search-control">
+          <i class="mdi mdi-magnify inline-search-icon" aria-hidden="true"></i>
+          <input
+            class="inline-search-input"
+            :class="{ 'has-filter': inlineTagFilter }"
+            v-model="inlineSearchQuery"
+            placeholder=""
+            @focus="onSearchFocus"
+            @blur="onSearchBlur"
+            @input="onSearchInput"
+            @keyup.enter="selectInlineTag(filteredTags[0])"
+            @keyup.escape="clearInlineTag"
+          />
+          <button
+            v-if="inlineTagFilter"
+            class="inline-search-clear"
+            @mousedown.prevent="clearInlineTag"
+          >×</button>
+          <div
+            v-if="inlineSearchFocused && filteredTags.length"
+            class="inline-search-dropdown"
+            ref="inlineSearchDropdown"
+            @scroll="onInlineSearchDropdownScroll"
+          >
+            <div
+              v-for="tag in filteredTags"
+              :key="tag"
+              class="inline-search-option"
+              @mousedown.prevent="selectInlineTag(tag)"
+            >{{ tag }}</div>
+          </div>
+        </div>
+      </transition>
+    </div>
+
     <section class="section">
       <!-- Masonry layout -->
       <div id="pins-container" class="container" v-if="blocks && layoutMode === 'masonry'">
@@ -124,6 +165,10 @@ import bus from './utils/bus';
 import EditorUI from './editors/PinEditorUI.vue';
 import niceLinks from './utils/niceLinks';
 
+const TOGGLE_HIDE_DELAY_MS = 3000;
+const SEARCH_ACTIVITY_HIDE_DELAY_MS = 15000;
+const TAG_DROPDOWN_BATCH_SIZE = 50;
+
 function createImageItem(pin) {
   const image = {};
   image.url = pinHandler.escapeUrl(pin.image.thumbnail.image);
@@ -154,6 +199,12 @@ function initialData() {
     toggleHidden: true,
     toggleFadeTimeout: null,
     togglePlaceholderHovered: false,
+    inlineTagFilter: null,
+    inlineSearchQuery: '',
+    inlineSearchFocused: false,
+    inlineSearchLastInteractionAt: 0,
+    visibleTagCount: TAG_DROPDOWN_BATCH_SIZE,
+    allTags: [],
     status: {
       loading: false,
       hasNext: true,
@@ -191,12 +242,64 @@ export default {
       },
     },
   },
+  computed: {
+    filteredTagMatches() {
+      const q = this.inlineSearchQuery.toLowerCase();
+      return q
+        ? this.allTags.filter(t => t.toLowerCase().includes(q))
+        : this.allTags;
+    },
+    filteredTags() {
+      return this.filteredTagMatches.slice(0, this.visibleTagCount);
+    },
+  },
   watch: {
     pinFilters() {
       this.reset();
     },
+    inlineSearchQuery() {
+      this.resetVisibleTagCount();
+      this.$nextTick(() => {
+        if (this.$refs.inlineSearchDropdown) {
+          this.$refs.inlineSearchDropdown.scrollTop = 0;
+        }
+      });
+    },
   },
   methods: {
+    resetVisibleTagCount() {
+      this.visibleTagCount = TAG_DROPDOWN_BATCH_SIZE;
+    },
+    onInlineSearchDropdownScroll(event) {
+      const { target } = event;
+      if (!target) return;
+      const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 16;
+      if (!nearBottom) return;
+      if (this.visibleTagCount >= this.filteredTagMatches.length) return;
+      this.visibleTagCount += TAG_DROPDOWN_BATCH_SIZE;
+    },
+    clearToggleFadeTimeout() {
+      if (this.toggleFadeTimeout) {
+        clearTimeout(this.toggleFadeTimeout);
+        this.toggleFadeTimeout = null;
+      }
+    },
+    scheduleToggleHide(delay = TOGGLE_HIDE_DELAY_MS) {
+      this.clearToggleFadeTimeout();
+      this.toggleFadeTimeout = setTimeout(() => {
+        const recentlyUsedSearch = Date.now() - this.inlineSearchLastInteractionAt < SEARCH_ACTIVITY_HIDE_DELAY_MS;
+        if (!this.togglePlaceholderHovered && !this.inlineSearchFocused && !recentlyUsedSearch) {
+          this.toggleHidden = true;
+          return;
+        }
+        this.scheduleToggleHide(delay);
+      }, delay);
+    },
+    markInlineSearchInteraction() {
+      this.inlineSearchLastInteractionAt = Date.now();
+      this.toggleHidden = false;
+      this.scheduleToggleHide(SEARCH_ACTIVITY_HIDE_DELAY_MS);
+    },
     shouldShowEdit(id) {
       if (!this.editorMeta.user.loggedIn) {
         return false;
@@ -215,33 +318,16 @@ export default {
     },
     handleToggleScroll() {
       this.toggleHidden = false;
-      if (this.toggleFadeTimeout) {
-        clearTimeout(this.toggleFadeTimeout);
-      }
-      this.toggleFadeTimeout = setTimeout(() => {
-        if (!this.togglePlaceholderHovered) {
-          this.toggleHidden = true;
-        }
-      }, 3000);
+      this.scheduleToggleHide();
     },
     showToggleOnHover() {
       this.togglePlaceholderHovered = true;
       this.toggleHidden = false;
-      if (this.toggleFadeTimeout) {
-        clearTimeout(this.toggleFadeTimeout);
-        this.toggleFadeTimeout = null;
-      }
+      this.clearToggleFadeTimeout();
     },
     hideToggleOnHover() {
       this.togglePlaceholderHovered = false;
-      if (this.toggleFadeTimeout) {
-        clearTimeout(this.toggleFadeTimeout);
-      }
-      this.toggleFadeTimeout = setTimeout(() => {
-        if (!this.togglePlaceholderHovered) {
-          this.toggleHidden = true;
-        }
-      }, 3000);
+      this.scheduleToggleHide();
     },
     onSingleImageLoaded(itemId) {
       if (this.blocksMap[itemId]) {
@@ -315,6 +401,17 @@ export default {
                 }
               }
             },
+            'open-pin': (pin) => {
+              if (!previewComponent) {
+                if (modal && modal.$children && modal.$children.length > 0) {
+                  previewComponent = modal.$children.find(child => child.$options.name === 'PinPreview');
+                }
+              }
+              if (previewComponent) {
+                this.$set(previewComponent, 'pinItem', pin);
+                this.$set(previewComponent, 'currentIndex', undefined);
+              }
+            },
           },
         },
       );
@@ -357,6 +454,11 @@ export default {
     },
     reset() {
       const data = initialData();
+      // Preserve inline search state across resets
+      data.inlineTagFilter = this.inlineTagFilter;
+      data.inlineSearchQuery = this.inlineSearchQuery;
+      data.inlineSearchFocused = this.inlineSearchFocused;
+      data.allTags = this.allTags;
       Object.entries(data).forEach(
         (kv) => {
           const [key, value] = kv;
@@ -371,8 +473,9 @@ export default {
       }
       this.status.loading = true;
       let promise;
-      if (this.pinFilters.tagFilter) {
-        promise = API.fetchPins(this.status.offset, this.pinFilters.tagFilter, null, null);
+      const effectiveTagFilter = this.inlineTagFilter || this.pinFilters.tagFilter;
+      if (effectiveTagFilter) {
+        promise = API.fetchPins(this.status.offset, effectiveTagFilter, null, null);
       } else if (this.pinFilters.userFilter) {
         promise = API.fetchPins(this.status.offset, null, this.pinFilters.userFilter, null);
       } else if (this.pinFilters.boardFilter) {
@@ -385,6 +488,8 @@ export default {
         );
       } else if (this.pinFilters.idFilter) {
         promise = API.fetchPin(this.pinFilters.idFilter);
+      } else if (this.pinFilters.similarToPin) {
+        promise = API.Pin.fetchSimilar(this.pinFilters.similarToPin, 48);
       } else {
         promise = API.fetchPins(this.status.offset);
       }
@@ -404,24 +509,50 @@ export default {
         () => { this.status.loading = false; },
       );
     },
+    selectInlineTag(tag) {
+      if (!tag) return;
+      this.inlineTagFilter = tag;
+      this.inlineSearchQuery = tag;
+      this.inlineSearchFocused = false;
+      this.reset();
+      this.markInlineSearchInteraction();
+    },
+    clearInlineTag() {
+      this.inlineTagFilter = null;
+      this.inlineSearchQuery = '';
+      this.inlineSearchFocused = false;
+      this.reset();
+      this.markInlineSearchInteraction();
+    },
+    onSearchFocus() {
+      this.inlineSearchFocused = true;
+      this.resetVisibleTagCount();
+      this.markInlineSearchInteraction();
+    },
+    onSearchBlur() {
+      this.inlineSearchFocused = false;
+      this.markInlineSearchInteraction();
+    },
+    onSearchInput() {
+      this.markInlineSearchInteraction();
+    },
     niceLinks,
   },
   created() {
     bus.bus.$on(bus.events.refreshPin, this.reset);
     this.registerScrollEvent();
     this.initialize();
+    API.Tag.fetchList().then((resp) => {
+      this.allTags = resp.data.map(t => t.name).sort();
+    });
     window.addEventListener('scroll', this.handleToggleScroll);
     // Show toggle briefly on load, then hide after 3s
     this.toggleHidden = false;
-    this.toggleFadeTimeout = setTimeout(() => {
-      this.toggleHidden = true;
-    }, 3000);
+    this.scheduleToggleHide();
   },
   beforeDestroy() {
     window.removeEventListener('scroll', this.handleToggleScroll);
-    if (this.toggleFadeTimeout) {
-      clearTimeout(this.toggleFadeTimeout);
-    }
+    this.clearToggleFadeTimeout();
   },
 };
 </script>
@@ -568,4 +699,104 @@ $avatar-height: 30px;
   background-color: #2d2d2d;
 }
 
+/* Inline tag search */
+.inline-search-placeholder {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 32px;
+  width: min(500px, calc(100vw - 220px));
+  z-index: 20;
+
+  @media (max-width: 419px) { display: none; }
+}
+
+.inline-search-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #000002;
+  border-radius: 999px;
+  height: 32px;
+  padding: 0 14px;
+}
+
+.inline-search-icon {
+  font-size: 18px;
+  line-height: 1;
+  color: #ff42ff;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.inline-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 13px;
+  font-family: 'Open Sans', sans-serif;
+  height: 100%;
+  min-width: 0;
+
+  &::placeholder { color: #888; }
+  &.has-filter { color: #ff42ff; }
+}
+
+.inline-search-clear {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 0 0 6px;
+  &:hover { color: #ff42ff; }
+}
+
+.inline-search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background-color: #000002;
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+}
+
+.inline-search-option {
+  padding: 7px 14px;
+  font-size: 13px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-family: 'Open Sans', sans-serif;
+
+  &:hover {
+    background-color: rgba(255, 66, 255, 0.15);
+    color: #ff42ff;
+  }
+}
+
+</style>
+
+<style lang="scss">
+.pin-preview-at-home {
+  .animation-content {
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    max-height: 90vh;
+    overflow: hidden;
+  }
+}
 </style>

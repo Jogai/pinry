@@ -13,6 +13,7 @@ Usage:
     python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --limit 50
     python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --pin-id 42
     python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --dump-tags
+    python scripts/clip_retag.py --api-url http://192.168.68.76:9002 --token YOUR_TOKEN --untagged-only
 """
 
 import argparse
@@ -160,10 +161,14 @@ def main():
     parser.add_argument("--pin-id", type=int, default=None, help="Process a single pin by ID")
     parser.add_argument("--model", default=HF_REPO,
                         help=f"HuggingFace repo for RAM++ (default: {HF_REPO})")
+    parser.add_argument("--delay", type=float, default=0.0,
+                        help="Seconds to wait between pins (default: 0)")
     parser.add_argument("--dump-tags", action="store_true",
                         help="Print all tags currently in the database and exit")
     parser.add_argument("--clean-orphans", action="store_true",
                         help="Delete tags with no pins via the API and exit (superuser only)")
+    parser.add_argument("--untagged-only", action="store_true",
+                        help="Only process pins that currently have no tags")
     args = parser.parse_args()
 
     if args.clean_orphans:
@@ -186,11 +191,14 @@ def main():
         pins = [fetch_one_pin(session, args.api_url, args.pin_id)]
     else:
         pins = list(fetch_all_pins(session, args.api_url))
+        if args.untagged_only:
+            pins = [p for p in pins if not p.get("tags")]
         if args.limit:
             pins = pins[: args.limit]
 
     print(f"\nProcessing {len(pins)} pins ...\n")
 
+    import time
     ok = skipped = 0
     for pin in pins:
         pin_id = pin["id"]
@@ -208,6 +216,8 @@ def main():
         except Exception as exc:
             print(f"  pin {pin_id}: ERROR — {exc}", file=sys.stderr)
             skipped += 1
+        if args.delay:
+            time.sleep(args.delay)
 
     suffix = " (dry run)" if args.dry_run else ""
     print(f"\nDone{suffix}: {ok} tagged, {skipped} errors.")

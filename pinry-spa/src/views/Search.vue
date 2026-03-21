@@ -17,7 +17,7 @@ export default {
   name: 'Search',
   data() {
     return {
-      pinFilters: null,
+      pinFilters: {},
       boardFilters: null,
     };
   },
@@ -27,8 +27,21 @@ export default {
     Boards,
     SearchPanel,
   },
-  created() {},
+  watch: {
+    $route(to) {
+      this.applyQueryParams(to.query);
+    },
+  },
+  created() {
+    this.applyQueryParams(this.$route.query);
+  },
   methods: {
+    applyQueryParams(query) {
+      if (query.tags) {
+        this.pinFilters = { tagFilter: query.tags };
+        this.boardFilters = null;
+      }
+    },
     doSearch(args) {
       this.pinFilters = null;
       this.boardFilters = null;

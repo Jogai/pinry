@@ -50,3 +50,7 @@ local_settings.py
 # docker image data
 docker/data/*
 docker-compose.yml
+
+.claude/*
+production_secret_key.txt
+scripts/.claude/*

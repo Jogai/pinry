@@ -36,13 +36,7 @@
             >
               Add
             </div>
-            <div
-              class="nav-menu-item"
-              @click="handleSearchClick"
-            >
-              Search
-            </div>
-            <div
+<div
               v-if="user.loggedIn"
               class="nav-menu-item"
               @click="handleProfileClick"
@@ -50,7 +44,7 @@
               Profile
             </div>
             <div
-              v-if="!user.loggedIn"
+              v-if="!user.loggedIn && signUpAllowed"
               class="nav-menu-item"
               @click="handleSignUpClick"
             >
@@ -116,6 +110,7 @@ export default {
         loggedIn: false,
         meta: {},
       },
+      signUpAllowed: false,
     };
   },
   computed: {
@@ -186,10 +181,6 @@ export default {
         this.fabSpinning = false;
         this.createPin();
       }, 400);
-    },
-    handleSearchClick() {
-      this.$router.push({ name: 'search' });
-      this.menuOpen = false;
     },
     handleProfileClick() {
       if (this.user.loggedIn && this.user.meta.username) {
@@ -352,6 +343,9 @@ export default {
   },
   beforeMount() {
     this.initializeUser();
+    api.Site.fetchSettings().then((resp) => {
+      this.signUpAllowed = resp.data.allow_new_registrations;
+    });
     // Close menu when clicking outside
     document.addEventListener('click', this.handleClickOutside);
     // Listen for scroll to show/hide icon

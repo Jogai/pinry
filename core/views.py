@@ -1,10 +1,17 @@
+import coreapi
+import coreschema
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Count
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins, routers
+from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.response import Response
+from rest_framework.schemas import AutoSchema
 from rest_framework.viewsets import GenericViewSet
-from taggit.models import Tag
+from taggit.models import Tag, TaggedItem
 
 from core import serializers as api
 from core.models import Image, Pin, Board
@@ -32,6 +39,51 @@ class PinViewSet(viewsets.ModelViewSet):
         query = Pin.objects.all()
         request = self.request
         return filter_private_pin(request, query)
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='similar',
+        schema=AutoSchema(manual_fields=[
+            coreapi.Field(
+                'limit',
+                required=False,
+                location='query',
+                schema=coreschema.Integer(
+                    description='Number of similar pins to return (max 48, default 12).',
+                ),
+            ),
+        ]),
+    )
+    def similar(self, request, pk=None):
+        """
+        Returns pins most similar to this one, ranked by shared tag count.
+        Private pins belonging to other users are excluded.
+        """
+        pin = self.get_object()
+        tag_ids = list(pin.tags.values_list('id', flat=True))
+        if not tag_ids:
+            return Response({'results': [], 'next': None})
+
+        limit = min(int(request.query_params.get('limit', 12)), 48)
+        ct = ContentType.objects.get_for_model(Pin)
+
+        similar_pin_ids = list(
+            TaggedItem.objects
+            .filter(tag_id__in=tag_ids, content_type=ct)
+            .exclude(object_id=pin.id)
+            .values('object_id')
+            .annotate(shared=Count('tag_id'))
+            .order_by('-shared')
+            .values_list('object_id', flat=True)[:limit]
+        )
+
+        pins_qs = filter_private_pin(request, Pin.objects.filter(id__in=similar_pin_ids))
+        id_order = {pid: i for i, pid in enumerate(similar_pin_ids)}
+        pins_sorted = sorted(pins_qs, key=lambda p: id_order.get(p.id, 999))
+
+        serializer = api.PinSerializer(pins_sorted, many=True, context={'request': request})
+        return Response({'results': serializer.data, 'next': None})
 
 
 class BoardViewSet(viewsets.ModelViewSet):

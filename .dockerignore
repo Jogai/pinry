@@ -8,6 +8,7 @@ static
 pinry-spa/node_modules
 pinry-spa/dist
 local_settings.py
+scripts/.venv
 
 # git
 .git

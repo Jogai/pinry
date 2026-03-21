@@ -108,6 +108,9 @@ const Pin = {
       data,
     );
   },
+  fetchSimilar(pinId, limit = 12) {
+    return axios.get(`${API_PREFIX}pins/${pinId}/similar/?limit=${limit}`);
+  },
 };
 
 
@@ -279,10 +282,17 @@ const Tag = {
   },
 };
 
+const Site = {
+  fetchSettings() {
+    return axios.get('/api/v2/profile/settings/');
+  },
+};
+
 export default {
   Tag,
   Pin,
   Board,
+  Site,
   fetchPin,
   fetchPins,
   fetchBoardForUser,
