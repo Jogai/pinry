@@ -179,6 +179,7 @@ function createImageItem(pin) {
   image.tags = pin.tags;
   image.author = pin.submitter.username;
   image.avatar = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMmQyZDJkIi8+CjxwYXRoIGQ9Ik0yNCAyNEMyNy4zMTM3IDI0IDMwIDIxLjMxMzcgMzAgMThDMzAgMTQuNjg2MyAyNy4zMTM3IDEyIDI0IDEyQzIwLjY4NjMgMTIgMTggMTQuNjg2MyAxOCAxOEMxOCAyMS4zMTM3IDIwLjY4NjMgMjQgMjQgMjRaIiBmaWxsPSIjNjY2NjY2Ii8+CjxwYXRoIGQ9Ik0yNCAyNkMyMC42ODYzIDI2IDE3LjI2MzcgMjcuMjEwNSAxNC42OTMgMjkuMDkzOEMxMi4xMjIzIDMwLjk3NyAxMC41IDMzLjQyOTMgMTAuNSAzNlY0MEgzNy41VjM2QzM3LjUgMzMuNDI5MyAzNS44Nzc3IDMwLjk3NyAzMy4zMDcgMjkuMDkzOEMzMC43MzYzIDI3LjIxMDUgMjcuMzEzNyAyNiAyNCAyNloiIGZpbGw9IiM2NjY2NjYiLz4KPC9zdmc+';
+  image.standard_image_url = pin.image.standard ? pinHandler.escapeUrl(pin.image.standard.image) : pinHandler.escapeUrl(pin.image.image);
   image.large_image_url = pinHandler.escapeUrl(pin.image.image);
   image.original_image_url = pin.url;
   image.referer = pin.referer;

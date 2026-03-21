@@ -1,7 +1,22 @@
 <template>
   <div class="pin-preview-modal" @mouseenter="showActions" @mouseleave="hideActions" @keydown="handleKeydown">
-    <div class="pin-preview-image-container" @touchstart="handleTouchStart" @touchend="handleTouchEnd" @click="handleImageTap">
-      <img :src="pinItem.large_image_url" alt="Image" class="pin-preview-image">
+    <div
+      class="pin-preview-image-container"
+      :class="{ 'is-zoomed': zoomLevel > 1, 'is-panning': isPanning }"
+      @touchstart="handleTouchStart"
+      @touchend="handleTouchEnd"
+      @click="handleImageTap"
+      @wheel.prevent="handleWheel"
+      @mousedown="handlePanStart"
+    >
+      <img
+        :src="displayImageSrc"
+        alt="Image"
+        class="pin-preview-image"
+        :style="{ transform: 'translate(' + panX + 'px, ' + panY + 'px) scale(' + zoomLevel + ')' }"
+        @dblclick.stop="resetZoom"
+        draggable="false"
+      >
       <transition name="fade">
         <div v-if="(isMobile && mobileOverlayVisible) || (!isMobile && actionsVisible)" class="pin-preview-actions">
           <a :href="pinItem.referer || '#'" target="_blank" class="action-item" :class="{ 'action-item-disabled': !pinItem.referer }">
@@ -65,8 +80,20 @@
 
       <transition name="sheet">
         <div v-if="similarSheetOpen" class="similar-sheet" @click.stop>
-          <div v-if="selectedSimilarPin" class="similar-sheet-large">
-            <img :src="selectedSimilarImageUrl" class="similar-sheet-large-img" />
+          <div
+            v-if="selectedSimilarPin"
+            class="similar-sheet-large"
+            :class="{ 'is-zoomed': similarZoomLevel > 1, 'is-panning': similarIsPanning }"
+            @wheel.prevent="handleSimilarWheel"
+            @mousedown="handleSimilarPanStart"
+          >
+            <img
+              :src="selectedSimilarDisplaySrc"
+              class="similar-sheet-large-img"
+              :style="{ transform: 'translate(' + similarPanX + 'px, ' + similarPanY + 'px) scale(' + similarZoomLevel + ')' }"
+              @dblclick.stop="resetSimilarZoom"
+              draggable="false"
+            />
 
             <!-- Tags -->
             <div v-if="selectedSimilarPin.tags && selectedSimilarPin.tags.length > 0" class="similar-sheet-meta">
@@ -137,6 +164,24 @@ export default {
       similarPins: [],
       similarSheetOpen: false,
       selectedSimilarPin: null,
+      zoomLevel: 1,
+      panX: 0,
+      panY: 0,
+      isPanning: false,
+      panLastX: 0,
+      panLastY: 0,
+      hasPanned: false,
+      fullImageLoaded: false,
+      fullImageLoading: false,
+      similarZoomLevel: 1,
+      similarPanX: 0,
+      similarPanY: 0,
+      similarIsPanning: false,
+      similarPanLastX: 0,
+      similarPanLastY: 0,
+      similarHasPanned: false,
+      similarFullImageLoaded: false,
+      similarFullImageLoading: false,
     };
   },
   computed: {
@@ -152,6 +197,18 @@ export default {
       const src = img.standard ? img.standard.image : img.image;
       return pinHandler.escapeUrl(src);
     },
+    displayImageSrc() {
+      if (this.fullImageLoaded) return this.pinItem.large_image_url;
+      return this.pinItem.standard_image_url || this.pinItem.large_image_url;
+    },
+    selectedSimilarFullSrc() {
+      if (!this.selectedSimilarPin) return '';
+      return pinHandler.escapeUrl(this.selectedSimilarPin.image.image);
+    },
+    selectedSimilarDisplaySrc() {
+      if (this.similarFullImageLoaded) return this.selectedSimilarFullSrc;
+      return this.selectedSimilarImageUrl;
+    },
     selectedSimilarIndex() {
       if (!this.selectedSimilarPin) return -1;
       return this.similarPins.findIndex(p => p.id === this.selectedSimilarPin.id);
@@ -163,8 +220,22 @@ export default {
       handler() {
         this.similarSheetOpen = false;
         this.selectedSimilarPin = null;
+        this.fullImageLoaded = false;
+        this.fullImageLoading = false;
+        this.resetZoom();
         this.loadSimilarPins();
       },
+    },
+    zoomLevel(val) {
+      if (val > 1) this.loadFullImage();
+    },
+    selectedSimilarPin() {
+      this.resetSimilarZoom();
+      this.similarFullImageLoaded = false;
+      this.similarFullImageLoading = false;
+    },
+    similarZoomLevel(val) {
+      if (val > 1) this.loadSimilarFullImage();
     },
     similarSheetOpen(val) {
       if (val) {
@@ -185,6 +256,10 @@ export default {
     if (this.metaTimeout) clearTimeout(this.metaTimeout);
     window.removeEventListener('resize', this.checkMobile);
     document.removeEventListener('keydown', this.interceptEscape, true);
+    document.removeEventListener('mousemove', this.handlePanMove);
+    document.removeEventListener('mouseup', this.handlePanEnd);
+    document.removeEventListener('mousemove', this.handleSimilarPanMove);
+    document.removeEventListener('mouseup', this.handleSimilarPanEnd);
   },
   methods: {
     interceptEscape(event) {
@@ -285,10 +360,115 @@ export default {
       }).catch(() => {});
     },
     niceLinks,
+    resetZoom() {
+      this.zoomLevel = 1;
+      this.panX = 0;
+      this.panY = 0;
+    },
+    resetSimilarZoom() {
+      this.similarZoomLevel = 1;
+      this.similarPanX = 0;
+      this.similarPanY = 0;
+    },
+    handleSimilarWheel(event) {
+      const delta = event.deltaY < 0 ? 0.15 : -0.15;
+      this.similarZoomLevel = Math.min(5, Math.max(1, this.similarZoomLevel + delta));
+      if (this.similarZoomLevel === 1) {
+        this.similarPanX = 0;
+        this.similarPanY = 0;
+      }
+    },
+    handleSimilarPanStart(event) {
+      if (this.similarZoomLevel <= 1) return;
+      event.preventDefault();
+      this.similarIsPanning = true;
+      this.similarHasPanned = false;
+      this.similarPanLastX = event.clientX;
+      this.similarPanLastY = event.clientY;
+      document.addEventListener('mousemove', this.handleSimilarPanMove);
+      document.addEventListener('mouseup', this.handleSimilarPanEnd);
+    },
+    handleSimilarPanMove(event) {
+      if (!this.similarIsPanning) return;
+      this.similarPanX += event.clientX - this.similarPanLastX;
+      this.similarPanY += event.clientY - this.similarPanLastY;
+      this.similarPanLastX = event.clientX;
+      this.similarPanLastY = event.clientY;
+      this.similarHasPanned = true;
+    },
+    handleSimilarPanEnd() {
+      this.similarIsPanning = false;
+      document.removeEventListener('mousemove', this.handleSimilarPanMove);
+      document.removeEventListener('mouseup', this.handleSimilarPanEnd);
+    },
+    loadSimilarFullImage() {
+      if (this.similarFullImageLoaded || this.similarFullImageLoading) return;
+      const src = this.selectedSimilarFullSrc;
+      if (!src || src === this.selectedSimilarImageUrl) return;
+      this.similarFullImageLoading = true;
+      const img = new Image();
+      img.onload = () => {
+        this.similarFullImageLoaded = true;
+        this.similarFullImageLoading = false;
+      };
+      img.onerror = () => { this.similarFullImageLoading = false; };
+      img.src = src;
+    },
+    loadFullImage() {
+      if (this.fullImageLoaded || this.fullImageLoading) return;
+      const src = this.pinItem.large_image_url;
+      if (!src || src === this.pinItem.standard_image_url) return;
+      this.fullImageLoading = true;
+      const img = new Image();
+      img.onload = () => {
+        this.fullImageLoaded = true;
+        this.fullImageLoading = false;
+      };
+      img.onerror = () => { this.fullImageLoading = false; };
+      img.src = src;
+    },
+    handleWheel(event) {
+      if (this.similarSheetOpen) return;
+      const delta = event.deltaY < 0 ? 0.15 : -0.15;
+      this.zoomLevel = Math.min(5, Math.max(1, this.zoomLevel + delta));
+      if (this.zoomLevel === 1) {
+        this.panX = 0;
+        this.panY = 0;
+      }
+    },
+    handlePanStart(event) {
+      if (this.zoomLevel <= 1 || this.similarSheetOpen) return;
+      event.preventDefault();
+      this.isPanning = true;
+      this.hasPanned = false;
+      this.panLastX = event.clientX;
+      this.panLastY = event.clientY;
+      document.addEventListener('mousemove', this.handlePanMove);
+      document.addEventListener('mouseup', this.handlePanEnd);
+    },
+    handlePanMove(event) {
+      if (!this.isPanning) return;
+      const dx = event.clientX - this.panLastX;
+      const dy = event.clientY - this.panLastY;
+      this.panX += dx;
+      this.panY += dy;
+      this.panLastX = event.clientX;
+      this.panLastY = event.clientY;
+      this.hasPanned = true;
+    },
+    handlePanEnd() {
+      this.isPanning = false;
+      document.removeEventListener('mousemove', this.handlePanMove);
+      document.removeEventListener('mouseup', this.handlePanEnd);
+    },
     checkMobile() {
       this.isMobile = window.innerWidth <= 768;
     },
     handleImageTap() {
+      if (this.hasPanned) {
+        this.hasPanned = false;
+        return;
+      }
       if (this.isMobile && !this.wasSwipe) {
         this.mobileOverlayVisible = !this.mobileOverlayVisible;
       }
@@ -324,6 +504,12 @@ export default {
   justify-content: center;
   min-height: 0;
   overflow: hidden;
+
+  &.is-zoomed { cursor: grab; }
+  &.is-panning {
+    cursor: grabbing;
+    user-select: none;
+  }
 }
 
 .pin-preview-image {
@@ -333,6 +519,8 @@ export default {
   border-radius: 8px;
   width: 100%;
   height: 100%;
+  transform-origin: center center;
+  transition: transform 0.1s ease;
 }
 
 .pin-preview-description {
@@ -510,6 +698,12 @@ export default {
   overflow: hidden;
   padding: 12px;
   min-height: 0;
+
+  &.is-zoomed { cursor: grab; }
+  &.is-panning {
+    cursor: grabbing;
+    user-select: none;
+  }
 }
 
 .similar-sheet-large-img {
@@ -517,6 +711,8 @@ export default {
   max-width: 100%;
   object-fit: contain;
   border-radius: 8px;
+  transform-origin: center center;
+  transition: transform 0.1s ease;
 }
 
 .similar-sheet-meta {
