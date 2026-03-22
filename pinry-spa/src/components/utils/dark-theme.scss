@@ -195,6 +195,33 @@ a {
   }
 }
 
+// Dialog (confirm/prompt) button styles — match modal button style
+.dialog {
+  .modal-card-foot {
+    justify-content: flex-end;
+    border-top: none;
+    background-color: $dark-surface !important;
+    padding: 0 30px 30px;
+
+    .button.is-primary {
+      background-color: #ff42ff !important;
+      border-color: #ff42ff !important;
+      border-radius: 9999px;
+      padding-left: 2em;
+      padding-right: 2em;
+    }
+
+    .button:not(.is-primary) {
+      background-color: transparent !important;
+      border-color: $dark-border !important;
+      color: $dark-text-secondary !important;
+      border-radius: 9999px;
+      padding-left: 2em;
+      padding-right: 2em;
+    }
+  }
+}
+
 // Buefy specific overrides
 .b-tag {
   background-color: $dark-surface-elevated !important;

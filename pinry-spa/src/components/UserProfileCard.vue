@@ -1,66 +1,50 @@
 <template>
     <div class="user-profile-card">
       <div id="user-home-container">
-        <div class="card">
-          <div class="card-content">
-            <div class="media">
-              <div class="media-left">
-                <figure class="image is-48x48">
-                  <b-skeleton width="48px" height="48px" :active="avatarLoading"></b-skeleton>
-                  <img
-                    @load="onAvatarLoaded"
-                    v-show="!avatarLoading"
-                    :src="user.avatar"
-                    alt="avatar"
-                  >
-                </figure>
-              </div>
-              <div class="media-content" v-show="!avatarLoading">
-                <p class="title is-4">{{ user.username }}</p>
-                <p class="subtitle is-6">@{{ location }}</p>
-              </div>
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <figure class="avatar-figure">
+              <b-skeleton width="64px" height="64px" :active="avatarLoading" circle></b-skeleton>
+              <img
+                @load="onAvatarLoaded"
+                v-show="!avatarLoading"
+                :src="user.avatar"
+                alt="avatar"
+                class="avatar-img"
+              >
+            </figure>
+            <div class="profile-identity" v-show="!avatarLoading">
+              <p class="profile-username">{{ user.username }}</p>
+              <p class="profile-location">@{{ location }}</p>
             </div>
-            <div class="content">
-              {{ $t("userProfileCardContent") }}
-              <br>
-            </div>
-
-            <div class="tabs is-toggle">
-              <ul>
-                <li :class="trueFalse2Class(inPins)">
-                  <a @click="go2UserPins">
-                    <b-icon
-                      type="is-dark"
-                      icon="image"
-                      custom-size="mdi-24px">
-                    </b-icon>
-                    <span>{{ $t("pinsUserProfileCardLink") }}</span>
-                  </a>
-                </li>
-                <li :class="trueFalse2Class(inBoard)">
-                  <a @click="go2UserBoard">
-                    <b-icon
-                      type="is-dark"
-                      icon="folder-multiple-image"
-                      custom-size="mdi-24px">
-                    </b-icon>
-                    <span>{{ $t("boardsUserProfileCardLink") }}</span>
-                  </a>
-                </li>
-                <li :class="trueFalse2Class(inProfile)">
-                  <a @click="go2UserProfile">
-                    <b-icon
-                      type="is-dark"
-                      icon="account"
-                      custom-size="mdi-24px">
-                    </b-icon>
-                    <span>{{ $t("profileUserProfileCardLink") }}</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-
           </div>
+
+          <nav class="profile-tabs">
+            <button
+              class="tab-btn"
+              :class="{ 'is-active': inPins }"
+              @click="go2UserPins"
+            >
+              <b-icon type="is-light" icon="image" custom-size="mdi-16px"></b-icon>
+              <span>{{ $t("pinsUserProfileCardLink") }}</span>
+            </button>
+            <button
+              class="tab-btn"
+              :class="{ 'is-active': inBoard }"
+              @click="go2UserBoard"
+            >
+              <b-icon type="is-light" icon="folder-multiple-image" custom-size="mdi-16px"></b-icon>
+              <span>{{ $t("boardsUserProfileCardLink") }}</span>
+            </button>
+            <button
+              class="tab-btn"
+              :class="{ 'is-active': inProfile }"
+              @click="go2UserProfile"
+            >
+              <b-icon type="is-light" icon="account" custom-size="mdi-16px"></b-icon>
+              <span>{{ $t("profileUserProfileCardLink") }}</span>
+            </button>
+          </nav>
         </div>
       </div>
     </div>
@@ -115,12 +99,6 @@ export default {
         { name: 'user', params: { user: this.username } },
       );
     },
-    trueFalse2Class(boolValue) {
-      if (boolValue) {
-        return 'is-active';
-      }
-      return '';
-    },
     onAvatarLoaded() {
       this.avatarLoading = false;
     },
@@ -145,12 +123,105 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@font-face {
+  font-family: 'Rubik';
+  src: url('../assets/Rubik/static/Rubik-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 #user-home-container {
   margin-top: 2rem;
   margin-left: auto;
   margin-right: auto;
-  box-shadow: 5px 5px 2px 1px rgba(0, 0, 255, .1);
 }
-@import '../components/utils/grid-layout';
+
+@import './utils/grid-layout';
 @include screen-grid-layout("#user-home-container");
+
+.profile-card {
+  background-color: #2d2d2d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.profile-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.75rem 1.75rem 1.25rem;
+}
+
+.avatar-figure {
+  flex-shrink: 0;
+  margin: 0;
+  width: 64px;
+  height: 64px;
+}
+
+.avatar-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-identity {
+  min-width: 0;
+}
+
+.profile-username {
+  font-family: 'Rubik', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-location {
+  font-size: 0.8rem;
+  color: #888888;
+  margin: 0;
+}
+
+.profile-tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  padding: 0 1.75rem 1.5rem;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid #404040;
+  background-color: transparent;
+  color: #e0e0e0;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  ::v-deep .mdi { color: #e0e0e0; transition: color 0.15s ease; }
+
+  &:hover {
+    background-color: #3a3a3a;
+    border-color: #555555;
+  }
+
+  &.is-active {
+    background-color: #ff42ff;
+    border-color: #ff42ff;
+    color: #ffffff;
+
+    ::v-deep .mdi { color: #ffffff; }
+  }
+}
 </style>
