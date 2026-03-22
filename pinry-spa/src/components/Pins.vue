@@ -376,6 +376,7 @@ export default {
             pinItem,
             allPins: this.blocks,
             currentIndex,
+            hasNext: this.status.hasNext,
           },
           scroll: 'keep',
           customClass: 'pin-preview-at-home',
@@ -390,15 +391,24 @@ export default {
                   }
                 }
 
-                // Update props
+                // Prefetch next page when within 5 pins of the end
+                if (this.blocks.length - newIndex <= 5) {
+                  this.fetchMore();
+                }
+
+                // Update props (after fetchMore may have extended blocks)
                 if (previewComponent) {
                   // Use Vue.set to ensure reactivity
                   this.$set(previewComponent, 'pinItem', this.blocks[newIndex]);
                   this.$set(previewComponent, 'currentIndex', newIndex);
+                  this.$set(previewComponent, 'allPins', this.blocks);
+                  this.$set(previewComponent, 'hasNext', this.status.hasNext);
                 } else if (modal && modal.propsData) {
                   // Fallback to propsData
                   this.$set(modal.propsData, 'pinItem', this.blocks[newIndex]);
                   this.$set(modal.propsData, 'currentIndex', newIndex);
+                  this.$set(modal.propsData, 'allPins', this.blocks);
+                  this.$set(modal.propsData, 'hasNext', this.status.hasNext);
                 }
               }
             },

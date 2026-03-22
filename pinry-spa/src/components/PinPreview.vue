@@ -149,7 +149,7 @@ import niceLinks from './utils/niceLinks';
 
 export default {
   name: 'PinPreview',
-  props: ['pinItem', 'allPins', 'currentIndex'],
+  props: ['pinItem', 'allPins', 'currentIndex', 'hasNext'],
   data() {
     return {
       actionsVisible: false,
@@ -189,7 +189,8 @@ export default {
       return this.allPins && this.currentIndex !== undefined && this.currentIndex > 0;
     },
     canNavigateNext() {
-      return this.allPins && this.currentIndex !== undefined && this.currentIndex < this.allPins.length - 1;
+      if (!this.allPins || this.currentIndex === undefined) return false;
+      return this.currentIndex < this.allPins.length - 1 || this.hasNext;
     },
     selectedSimilarImageUrl() {
       if (!this.selectedSimilarPin) return '';
