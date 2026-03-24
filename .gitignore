@@ -54,3 +54,4 @@ docker-compose.yml
 .claude/*
 production_secret_key.txt
 scripts/.claude/*
+.pnpm-store/
